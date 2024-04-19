@@ -86,6 +86,7 @@ const emitSocketEvent = (
   event: string,
   payload: any
 ) => {
+  console.log("emit event room: ", roomId);
   req.app.get("io").in(roomId).emit(event, payload);
 };
 

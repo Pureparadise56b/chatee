@@ -37,15 +37,15 @@
 
     const userTyping = document.getElementById("user-typing");
     document.getElementById("joinChat").addEventListener("click", () => {
-      socket.emit("joinChat", "12345");
+      socket.emit("joinChat", "662250893af5fdc1a763c857");
     });
 
     document.getElementById("user-input").addEventListener("input", () => {
       clearTimeout(typingTimer);
-      socket.emit("typing", { user, chatId: "12345" });
+      socket.emit("typing", { user, chatId: "662250893af5fdc1a763c857" });
 
       typingTimer = setTimeout(() => {
-        socket.emit("stopTyping", "12345");
+        socket.emit("stopTyping", "662250893af5fdc1a763c857");
       }, typingInterval);
     });
 
@@ -55,6 +55,14 @@
 
     socket.on("stopTyping", (chatId) => {
       userTyping.innerText = null;
+    });
+
+    socket.on("newChat", (payload) => {
+      console.log("hi");
+    });
+
+    socket.on("socketError", (error) => {
+      console.error(error);
     });
   </script>
 </html>

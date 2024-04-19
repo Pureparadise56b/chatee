@@ -37,7 +37,7 @@ export interface decodedDataInterface extends JwtPayload {
   id: string;
 }
 
-export interface requestUserInterface {
+interface requestUserInterface {
   _id: string;
   username: string;
   phoneNumber: string;
@@ -46,4 +46,9 @@ export interface requestUserInterface {
   accountVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface availabeNumbersResponseInteface {
+  number: string;
+  registred: boolean;
 }
