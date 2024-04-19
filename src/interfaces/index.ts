@@ -1,4 +1,4 @@
-import { Document } from "mongoose";
+import { Document, Types } from "mongoose";
 import { JwtPayload } from "jsonwebtoken";
 interface ProfileInterface {
   publicId: string;
@@ -7,6 +7,7 @@ interface ProfileInterface {
 
 export interface UserInterface extends Document {
   username: string;
+  isUsernameChanged: boolean;
   phoneNumber: string;
   isCurrentlyLogin: boolean;
   profile: ProfileInterface;
@@ -16,6 +17,20 @@ export interface UserInterface extends Document {
   otp?: string;
   otpExpiry?: Date;
   generateAccessToken: Function;
+}
+
+export interface ChatInterface extends Document {
+  chatName: string;
+  isGroupChat: boolean;
+  members: [Types.ObjectId];
+  lastMessage: Types.ObjectId;
+  admin: Types.ObjectId;
+}
+
+export interface MessageInterface extends Document {
+  sender: Types.ObjectId;
+  content: string;
+  chatId: Types.ObjectId;
 }
 
 export interface decodedDataInterface extends JwtPayload {

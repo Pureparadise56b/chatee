@@ -4,7 +4,8 @@ export const zodUserSchema = z
   .string()
   .min(3, "username must be atleast 3 charecters")
   .max(50, "username must be lower than 50 charecters")
-  .trim();
+  .trim()
+  .nullable();
 
 export const zodPhoneNumberSchema = z
   .string()

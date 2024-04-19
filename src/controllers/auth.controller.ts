@@ -27,45 +27,37 @@ const loginUser = AsyncHandler(async (req, res) => {
     throw new ApiError(400, errorMessage);
   }
 
-  const otp = generateOtp();
-
   const existingUser = await User.findOne({
-    phoneNumber,
-    accountVerified: true,
+    phoneNumber: parsedPhoneNumber.data,
   });
 
   if (existingUser) {
-    if (!existingUser.accountVerified) {
-      throw new ApiError(401, "Please verify your account first");
-    } else {
-      if (existingUser.isCurrentlyLogin) {
-        throw new ApiError(409, "User already logged in");
-      } else {
-        existingUser.otp = otp;
-        existingUser.otpExpiry = new Date(Date.now() + 1000 * 60 * 60);
-        await existingUser.save();
-        sendOTP(otp, parsedPhoneNumber.data);
-        res
-          .status(200)
-          .json(new ApiResponse(200, "User otp sent, please verify"));
-      }
-    }
-    return;
+    if (!existingUser.accountVerified)
+      throw new ApiError(400, "It's seems like your account is not verified");
+    const otp = generateOtp();
+
+    existingUser.otp = otp;
+    existingUser.otpExpiry = new Date(Date.now() + 1000 * 60 * 60);
+    await existingUser.save();
+    sendOTP(otp, parsedPhoneNumber.data);
+    return res
+      .status(200)
+      .json(new ApiResponse(201, "User logged in successfully"));
+  } else {
+    const otp = generateOtp();
+    const createdUser = await User.create({
+      phoneNumber: parsedPhoneNumber.data,
+      registerType: USER_REGISTER_TYPE.LOCAL,
+      otp,
+      otpExpiry: new Date(Date.now() + 1000 * 60 * 60),
+    });
+    sendOTP(otp, parsedPhoneNumber.data);
+
+    if (!createdUser) throw new ApiError(500, "Error while creating user");
   }
 
-  const createdUser = await User.create({
-    phoneNumber: parsedPhoneNumber.data,
-    registerType: USER_REGISTER_TYPE.LOCAL,
-    otp,
-    otpExpiry: new Date(Date.now() + 1000 * 60 * 60),
-  });
-
-  if (!createdUser) throw new ApiError(500, "Error while creating user");
-
-  sendOTP(otp, parsedPhoneNumber.data);
-
   res
-    .status(200)
+    .status(201)
     .json(
       new ApiResponse(
         201,
@@ -96,12 +88,11 @@ const verifyUser = AsyncHandler(async (req, res) => {
   user.isCurrentlyLogin = true;
   user.otp = undefined;
   user.otpExpiry = undefined;
-  const verifiedUser = await user.save();
+  await user.save();
   const token = user.generateAccessToken();
 
   res.status(200).json(
     new ApiResponse(200, "User verified successfully", {
-      user: verifiedUser,
       token,
     })
   );
@@ -116,7 +107,7 @@ const resendOtp = AsyncHandler(async (req, res) => {
     throw new ApiError(400, errorMessage);
   }
 
-  const user = await User.findOne({ phoneNumber, accountVerified: false });
+  const user = await User.findOne({ phoneNumber });
 
   if (!user) throw new ApiError(404, "User not found");
 
@@ -135,7 +126,13 @@ const resendOtp = AsyncHandler(async (req, res) => {
 const logoutUser = AsyncHandler(async (req, res) => {
   const { id } = req.user as UserInterface;
 
-  await User.findByIdAndUpdate(id, { isCurrentlyLogin: false });
+  const user = await User.findById(id);
+
+  if (!user?.isCurrentlyLogin) throw new ApiError(400, "User already logout");
+
+  user.isCurrentlyLogin = false;
+
+  await user.save();
 
   res.status(200).json(new ApiResponse(200, "User logout successfully"));
 });

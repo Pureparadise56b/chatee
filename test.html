@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <h1>Socket</h1>
+    <div id="user-typing" style="font-size: 20px; color: green"></div>
+    <div style="display: flex; flex-direction: column; width: 300px; gap: 10px">
+      <textarea
+        name="user-input"
+        id="user-input"
+        cols="30"
+        rows="5"
+        placeholder="message..."
+        style="padding: 5px"
+      ></textarea>
+      <button id="joinChat" style="padding: 6px; font-size: 15px">
+        join Chat
+      </button>
+    </div>
+  </body>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const token = window.localStorage.getItem("token");
+    const user = window.localStorage.getItem("user");
+    const socket = io("http://localhost:8000", {
+      auth: {
+        token,
+      },
+    });
+
+    let typingTimer;
+    const typingInterval = 2000;
+
+    const userTyping = document.getElementById("user-typing");
+    document.getElementById("joinChat").addEventListener("click", () => {
+      socket.emit("joinChat", "12345");
+    });
+
+    document.getElementById("user-input").addEventListener("input", () => {
+      clearTimeout(typingTimer);
+      socket.emit("typing", { user, chatId: "12345" });
+
+      typingTimer = setTimeout(() => {
+        socket.emit("stopTyping", "12345");
+      }, typingInterval);
+    });
+
+    socket.on("typing", (payload) => {
+      userTyping.innerText = `${payload.user} is typing...`;
+    });
+
+    socket.on("stopTyping", (chatId) => {
+      userTyping.innerText = null;
+    });
+  </script>
+</html>

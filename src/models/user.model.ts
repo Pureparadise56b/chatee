@@ -6,12 +6,15 @@ const userSchema = new Schema<UserInterface>(
   {
     username: {
       type: String,
-      default: "Babulal",
+      default: "default_user",
       trim: true,
       maxlength: 50,
       minlength: 3,
     },
-
+    isUsernameChanged: {
+      type: Boolean,
+      default: false,
+    },
     phoneNumber: {
       type: String,
       required: [true, "phone number is required"],
