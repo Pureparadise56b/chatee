@@ -50,7 +50,7 @@ interface requestUserInterface {
   updatedAt: Date;
 }
 
-export interface availabeNumbersResponseInteface {
+interface availabeNumbersResponseInteface {
   number: string;
   registred: boolean;
 }

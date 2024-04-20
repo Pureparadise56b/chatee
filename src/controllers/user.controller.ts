@@ -3,7 +3,7 @@ import { ApiResponse } from "../utils/ApiResponse.util";
 import { ApiError } from "../utils/ApiError.util";
 import { User } from "../models/user.model";
 import { zodUserSchema } from "../zod/schema.zod";
-import { UserInterface, availabeNumbersResponseInteface } from "../interfaces";
+import { UserInterface } from "../interfaces";
 
 const changeUsername = AsyncHandler(async (req, res) => {
   const { id } = req.user as UserInterface;
@@ -62,4 +62,12 @@ const getAvailableNumbers = AsyncHandler(async (req, res) => {
     );
 });
 
-export { changeUsername, getAvailableNumbers };
+const getUserDetails = AsyncHandler(async (req, res) => {
+  const { id } = req.user as UserInterface;
+
+  const user = await User.findById(id);
+
+  res.status(200).json(new ApiResponse(200, "User fetched successfully", user));
+});
+
+export { changeUsername, getAvailableNumbers, getUserDetails };
