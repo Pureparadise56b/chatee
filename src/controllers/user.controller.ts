@@ -45,37 +45,21 @@ const getAvailableNumbers = AsyncHandler(async (req, res) => {
     },
     {
       $project: {
-        _id: 0,
         phoneNumber: 1,
+        isRegistered: { $literal: true },
       },
     },
   ]);
 
-  const numbers: string[] = [];
-
-  availableNumbers.map((item) => numbers.push(item.phoneNumber));
-
-  const availableNumbersSet = new Set(numbers);
-
-  const responseArray: availabeNumbersResponseInteface[] = [];
-
-  allNumbers.map((number: string) => {
-    if (availableNumbersSet.has(number)) {
-      const availableItem: availabeNumbersResponseInteface = {
-        number,
-        registred: true,
-      };
-      responseArray.push(availableItem);
-    } else {
-      const notAvailableItem: availabeNumbersResponseInteface = {
-        number,
-        registred: false,
-      };
-      responseArray.push(notAvailableItem);
-    }
-  });
-
-  res.status(200).json(responseArray);
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        "Available numbers fetched successfully.",
+        availableNumbers
+      )
+    );
 });
 
 export { changeUsername, getAvailableNumbers };
