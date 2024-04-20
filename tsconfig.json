@@ -1,12 +1,13 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
     "target": "ES2020",
     "strict": true,
     "outDir": "dist"
   },
   "include": [
-    "./src/**/*.ts",
+    "./src/**/*.ts"
   ]
 }
