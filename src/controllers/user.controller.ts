@@ -11,7 +11,7 @@ const changeUsername = AsyncHandler(async (req, res) => {
 
   const user = await User.findById(id);
 
-  if (user?.isUsernameChanged) throw new ApiError(400, "User name already set");
+  if (user?.isUsernameSet) throw new ApiError(400, "User name already set");
 
   const parsedUsername = zodUserSchema.safeParse(username);
 
@@ -22,7 +22,7 @@ const changeUsername = AsyncHandler(async (req, res) => {
 
   if (user) {
     user.username = parsedUsername.data || "";
-    user.isUsernameChanged = true;
+    user.isUsernameSet = true;
     await user.save();
   }
 

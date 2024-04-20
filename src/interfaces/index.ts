@@ -1,5 +1,6 @@
 import { Document, Types } from "mongoose";
 import { JwtPayload } from "jsonwebtoken";
+
 interface ProfileInterface {
   publicId: string;
   url: string;
@@ -7,7 +8,7 @@ interface ProfileInterface {
 
 export interface UserInterface extends Document {
   username: string;
-  isUsernameChanged: boolean;
+  isUsernameSet: boolean;
   phoneNumber: string;
   isCurrentlyLogin: boolean;
   profile: ProfileInterface;
@@ -22,7 +23,7 @@ export interface UserInterface extends Document {
 export interface ChatInterface extends Document {
   chatName: string;
   isGroupChat: boolean;
-  members: [Types.ObjectId];
+  members: Types.ObjectId[];
   lastMessage: Types.ObjectId;
   admin: Types.ObjectId;
 }
@@ -35,6 +36,7 @@ export interface MessageInterface extends Document {
 
 export interface decodedDataInterface extends JwtPayload {
   id: string;
+  isUsernameSet: boolean;
 }
 
 interface requestUserInterface {

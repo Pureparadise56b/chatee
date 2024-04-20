@@ -11,7 +11,7 @@ const userSchema = new Schema<UserInterface>(
       maxlength: 50,
       minlength: 3,
     },
-    isUsernameChanged: {
+    isUsernameSet: {
       type: Boolean,
       default: false,
     },
@@ -57,6 +57,7 @@ const userSchema = new Schema<UserInterface>(
 userSchema.methods.generateAccessToken = function () {
   const payload = {
     id: this._id,
+    isUsernameSet: this.isUsernameSet,
   };
   return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET!);
 };
