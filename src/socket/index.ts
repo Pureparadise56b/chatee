@@ -20,6 +20,14 @@ const mountJoinChatEvent = (socket: Socket): void => {
   });
 };
 
+const mountLeaveChatEvent = (socket: Socket): void => {
+  socket.on(ChatEventEnum.LEAVE_CHAT_EVENT, (chatId) => {
+    console.log("User leaved a chat: ", chatId);
+    socket.leave(chatId);
+    console.log("ChatRoom: ", socket.rooms);
+  });
+};
+
 const mountUserTypingEvent = (socket: Socket): void => {
   socket.on(ChatEventEnum.TYPING_EVENT, (payload) => {
     socket.in(payload.chatId).emit(ChatEventEnum.TYPING_EVENT, payload);
@@ -64,6 +72,11 @@ const initializeSocketIO = (io: Server) => {
       mountJoinChatEvent(socket);
       mountUserTypingEvent(socket);
       mountUserTypingStopEvent(socket);
+      mountLeaveChatEvent(socket);
+
+      socket.on("sendMessage", (payload) => {
+        io.to(payload.chatId).emit("sendMessage", payload);
+      });
 
       socket.on(ChatEventEnum.DISCONNECT_EVENT, () => {
         console.log("User disconnected userId: ", socket.user._id.toString());
