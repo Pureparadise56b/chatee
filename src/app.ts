@@ -8,7 +8,9 @@ import chatRouter from "./routes/chat.route";
 import messageRouter from "./routes/message.route";
 import { initializeSocketIO } from "./socket";
 import { redisSubscriber } from "./redis/config.redis";
+import { kafkaConsumer } from "./kafka/config.kafka";
 import path from "path";
+import { Message } from "./models/message.model";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -54,5 +56,36 @@ app.get("/", (req, res) => {
 
 initializeSocketIO(io);
 redisSubscriber.subscribe("MESSAGES", "TYPING");
+
+kafkaConsumer.subscribe({
+  topic: "MESSAGES",
+  fromBeginning: true,
+});
+
+(async () => {
+  await kafkaConsumer.run({
+    eachMessage: async ({ topic, partition, message, pause }) => {
+      try {
+        const data = JSON.parse(message.value?.toString() || "");
+
+        await Message.create({
+          content: data.message,
+        });
+      } catch (error) {
+        console.error("Error while inserting message into database: ", error);
+        pause();
+        setTimeout(() => {
+          kafkaConsumer.resume([
+            {
+              topic: "MESSAGES",
+            },
+          ]);
+        }, 5000);
+      }
+    },
+  });
+})().catch((err) => {
+  console.error("Error while consuming messages: ", err);
+});
 
 export { httpServer };

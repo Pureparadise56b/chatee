@@ -3,7 +3,7 @@ import Redis from "ioredis";
 const redisClient = new Redis();
 
 redisClient.on("connect", () => {
-  console.log("Redis Client connected...");
+  console.log("\nRedis Client connected...");
 });
 
 redisClient.on("error", (err) => {

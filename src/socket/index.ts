@@ -6,6 +6,7 @@ import { User } from "../models/user.model";
 import { ChatEventEnum } from "../constants";
 import { Request } from "express";
 import { redisPublisher, redisSubscriber } from "../redis/config.redis";
+import { kafkaProducer } from "../kafka/config.kafka";
 
 declare module "socket.io" {
   export interface Socket {
@@ -46,10 +47,18 @@ const mountUserTypingStopEvent = (socket: Socket): void => {
 };
 
 const initializeSocketIO = (io: Server) => {
-  redisSubscriber.on("message", (channel, payloadString) => {
+  redisSubscriber.on("message", async (channel, payloadString) => {
     if (channel === "MESSAGES") {
       const payload = JSON.parse(payloadString);
       io.to(payload.chatId).emit(ChatEventEnum.MESSAGE_RECEIVED_EVENT, payload);
+      await kafkaProducer.send({
+        topic: "MESSAGES",
+        messages: [
+          {
+            value: JSON.stringify(payload),
+          },
+        ],
+      });
     }
   });
 
