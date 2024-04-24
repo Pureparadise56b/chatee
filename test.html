@@ -61,7 +61,7 @@
       messages.appendChild(p);
     };
 
-    const socket = io("https://chatee-production.up.railway.app/", {
+    const socket = io({
       auth: {
         token,
       },
@@ -126,7 +126,7 @@
       console.error(error);
     });
 
-    socket.on("sendMessage", (payload) => {
+    socket.on("messageReceived", (payload) => {
       sendMessageToFrontend(payload);
     });
   </script>

@@ -5,7 +5,7 @@ import { User } from "../models/user.model";
 import { zodUserSchema } from "../zod/schema.zod";
 import { UserInterface } from "../interfaces";
 
-const changeUsername = AsyncHandler(async (req, res) => {
+const setUsername = AsyncHandler(async (req, res) => {
   const { id } = req.user as UserInterface;
   const { username } = req.body;
 
@@ -70,4 +70,4 @@ const getUserDetails = AsyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "User fetched successfully", user));
 });
 
-export { changeUsername, getAvailableNumbers, getUserDetails };
+export { setUsername, getAvailableNumbers, getUserDetails };

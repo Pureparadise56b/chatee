@@ -14,6 +14,7 @@ export const ChatEventEnum = Object.freeze({
   DISCONNECT_EVENT: "disconnect",
   JOIN_CHAT_EVENT: "joinChat",
   LEAVE_CHAT_EVENT: "leaveChat",
+  MESSAAGE_SEND_EVENT: "sendMessage",
   MESSAGE_RECEIVED_EVENT: "messageReceived",
   NEW_CHAT_EVENT: "newChat",
   SOCKET_ERROR_EVENT: "socketError",

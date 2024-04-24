@@ -5,6 +5,7 @@ import { UserInterface, decodedDataInterface } from "../interfaces";
 import { User } from "../models/user.model";
 import { ChatEventEnum } from "../constants";
 import { Request } from "express";
+import { redisPublisher, redisSubscriber } from "../redis/config.redis";
 
 declare module "socket.io" {
   export interface Socket {
@@ -30,17 +31,28 @@ const mountLeaveChatEvent = (socket: Socket): void => {
 
 const mountUserTypingEvent = (socket: Socket): void => {
   socket.on(ChatEventEnum.TYPING_EVENT, (payload) => {
+    // TODO: scale typing event for different servers
+
     socket.in(payload.chatId).emit(ChatEventEnum.TYPING_EVENT, payload);
   });
 };
 
 const mountUserTypingStopEvent = (socket: Socket): void => {
   socket.on(ChatEventEnum.STOP_TYPING_EVENT, (chatId) => {
+    // TODO: scale stop typing event for different servers
+
     socket.in(chatId).emit(ChatEventEnum.STOP_TYPING_EVENT, chatId);
   });
 };
 
 const initializeSocketIO = (io: Server) => {
+  redisSubscriber.on("message", (channel, payloadString) => {
+    if (channel === "MESSAGES") {
+      const payload = JSON.parse(payloadString);
+      io.to(payload.chatId).emit(ChatEventEnum.MESSAGE_RECEIVED_EVENT, payload);
+    }
+  });
+
   return io.on("connection", async (socket) => {
     try {
       let token = socket.handshake.auth.token;
@@ -74,8 +86,8 @@ const initializeSocketIO = (io: Server) => {
       mountUserTypingStopEvent(socket);
       mountLeaveChatEvent(socket);
 
-      socket.on("sendMessage", (payload) => {
-        io.to(payload.chatId).emit("sendMessage", payload);
+      socket.on(ChatEventEnum.MESSAAGE_SEND_EVENT, (payload) => {
+        redisPublisher.publish("MESSAGES", JSON.stringify(payload));
       });
 
       socket.on(ChatEventEnum.DISCONNECT_EVENT, () => {

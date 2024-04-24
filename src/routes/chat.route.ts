@@ -10,6 +10,6 @@ const router = express.Router();
 router.use(JWTVerify);
 
 router.route("/").get(getAllChats);
-router.route("/:receiverId").get(getOrCreateOneonOneChat);
+router.route("/:receiverId").post(getOrCreateOneonOneChat);
 
 export default router;

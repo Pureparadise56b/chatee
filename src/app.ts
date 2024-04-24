@@ -5,7 +5,9 @@ import cors from "cors";
 import authRouter from "./routes/auth.route";
 import userRouter from "./routes/user.route";
 import chatRouter from "./routes/chat.route";
+import messageRouter from "./routes/message.route";
 import { initializeSocketIO } from "./socket";
+import { redisSubscriber } from "./redis/config.redis";
 import path from "path";
 
 const app = express();
@@ -38,6 +40,9 @@ app.use("/api/user", userRouter);
 // chat routes
 app.use("/api/chats", chatRouter);
 
+// message routes
+app.use("/api/messages", messageRouter);
+
 // error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {
   res.status(err.statusCode ? err.statusCode : 500).send(err.message);
@@ -48,4 +53,6 @@ app.get("/", (req, res) => {
 });
 
 initializeSocketIO(io);
+redisSubscriber.subscribe("MESSAGES", "TYPING");
+
 export { httpServer };
