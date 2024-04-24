@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "nodemon -r dotenv/config --exec ts-node ./src/index.ts",
     "build": "tsc -p .",
-    "start": "node ./dist/index.js"
+    "start": "node ./dist/index.js",
+    "setup": "docker compose up -d",
+    "stop": "docker compose down --volumes"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
