@@ -91,6 +91,8 @@ kafkaConsumer.subscribe({
 
         await Message.create({
           content: data.message,
+          chatId: data.chatId,
+          sender: data.sender,
         });
       } catch (error) {
         console.error("Error while inserting message into database: ", error);
