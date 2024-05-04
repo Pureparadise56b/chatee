@@ -7,10 +7,11 @@ import userRouter from "./routes/user.route";
 import chatRouter from "./routes/chat.route";
 import messageRouter from "./routes/message.route";
 import { initializeSocketIO } from "./socket";
-import { redisSubscriber } from "./redis/config.redis";
-import { kafkaConsumer } from "./kafka/config.kafka";
+import { createRedisClient } from "./redis/config.redis";
+import { kafkaConsumer, kafkaProducer } from "./kafka/config.kafka";
 import path from "path";
 import { Message } from "./models/message.model";
+import { ChatEventEnum } from "./constants";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -22,6 +23,8 @@ const io = new Server(httpServer, {
     credentials: true,
   },
 });
+
+const redisSubscriber = createRedisClient();
 
 app.set("io", io);
 
@@ -61,6 +64,24 @@ kafkaConsumer.subscribe({
   topic: "MESSAGES",
   fromBeginning: true,
 });
+
+(() => {
+  redisSubscriber.on("message", async (channel, payloadString) => {
+    if (channel === "MESSAGES") {
+      const payload = JSON.parse(payloadString);
+      if (!payload.chatId) return;
+      io.to(payload.chatId).emit(ChatEventEnum.MESSAGE_RECEIVED_EVENT, payload);
+      await kafkaProducer.send({
+        topic: "MESSAGES",
+        messages: [
+          {
+            value: JSON.stringify(payload),
+          },
+        ],
+      });
+    }
+  });
+})();
 
 (async () => {
   await kafkaConsumer.run({

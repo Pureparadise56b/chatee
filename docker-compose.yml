@@ -1,13 +1,5 @@
 version: "3"
 services:
-  chatee-redis:
-    image: redis
-    ports:
-      - 6379:6379
-    volumes:
-      - redis-data:/data
-
-
   zookeeper:
     image: zookeeper
     ports:
@@ -23,8 +15,3 @@ services:
       - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
     depends_on:
       - zookeeper
-      - chatee-redis
-
-volumes: 
-  redis-data:
-    driver: local

@@ -5,14 +5,15 @@ import { UserInterface, decodedDataInterface } from "../interfaces";
 import { User } from "../models/user.model";
 import { ChatEventEnum } from "../constants";
 import { Request } from "express";
-import { redisPublisher, redisSubscriber } from "../redis/config.redis";
-import { kafkaProducer } from "../kafka/config.kafka";
+import { createRedisClient } from "../redis/config.redis";
 
 declare module "socket.io" {
   export interface Socket {
     user: UserInterface;
   }
 }
+
+const redisPublisher = createRedisClient();
 
 const mountJoinChatEvent = (socket: Socket): void => {
   socket.on(ChatEventEnum.JOIN_CHAT_EVENT, (chatId) => {
@@ -47,22 +48,6 @@ const mountUserTypingStopEvent = (socket: Socket): void => {
 };
 
 const initializeSocketIO = (io: Server) => {
-  redisSubscriber.on("message", async (channel, payloadString) => {
-    if (channel === "MESSAGES") {
-      const payload = JSON.parse(payloadString);
-      if (!payload.chatId) return;
-      io.to(payload.chatId).emit(ChatEventEnum.MESSAGE_RECEIVED_EVENT, payload);
-      await kafkaProducer.send({
-        topic: "MESSAGES",
-        messages: [
-          {
-            value: JSON.stringify(payload),
-          },
-        ],
-      });
-    }
-  });
-
   return io.on("connection", async (socket) => {
     try {
       let token = socket.handshake.auth.token;
