@@ -93,9 +93,6 @@ const initializeSocketIO = (io: Server) => {
         redisPublisher.publish("MESSAGES", JSON.stringify(payload));
       });
 
-      // Emit user online event
-      socket.emit("connect", {});
-
       socket.on(ChatEventEnum.DISCONNECT_EVENT, () => {
         console.log("User disconnected userId: ", socket.user._id.toString());
         if (socket.user._id) {
