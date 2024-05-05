@@ -94,7 +94,7 @@ const initializeSocketIO = (io: Server) => {
       });
 
       // Emit user online event
-      socket.emit('connect', {});
+      socket.emit("connect", {});
 
       socket.on(ChatEventEnum.DISCONNECT_EVENT, () => {
         console.log("User disconnected userId: ", socket.user._id.toString());
