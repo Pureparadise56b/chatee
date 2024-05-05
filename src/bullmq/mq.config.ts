@@ -16,7 +16,7 @@ export const queueWorker = new Worker(
   async (job) => {
     try {
       await Message.create({
-        content: job.data.message,
+        content: job.data.content,
         chatId: job.data.chatId,
         sender: job.data.sender,
       });
