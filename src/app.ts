@@ -1,16 +1,15 @@
 import express from "express";
 import http from "http";
-import { Server } from "socket.io";
 import cors from "cors";
+import path from "path";
 import authRouter from "./routes/auth.route";
 import userRouter from "./routes/user.route";
 import chatRouter from "./routes/chat.route";
 import messageRouter from "./routes/message.route";
+import { Server } from "socket.io";
 import { initializeSocketIO } from "./socket";
 import { createRedisClient } from "./redis/config.redis";
-import { kafkaConsumer, kafkaProducer } from "./kafka/config.kafka";
-import path from "path";
-import { Message } from "./models/message.model";
+import { messageQueue } from "./bullmq/mq.config";
 import { ChatEventEnum } from "./constants";
 
 const app = express();
@@ -24,16 +23,13 @@ const io = new Server(httpServer, {
   },
 });
 
-const redisSubscriber = createRedisClient();
-
-app.set("io", io);
-
 app.use(
   cors({
     origin: process.env.ORIGIN === "*" ? "*" : process.env.ORIGIN?.split(","),
     credentials: true,
   })
 );
+app.set("io", io);
 
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
@@ -58,12 +54,9 @@ app.get("/", (req, res) => {
 });
 
 initializeSocketIO(io);
-redisSubscriber.subscribe("MESSAGES", "TYPING");
 
-kafkaConsumer.subscribe({
-  topic: "MESSAGES",
-  fromBeginning: true,
-});
+const redisSubscriber = createRedisClient();
+redisSubscriber.subscribe("MESSAGES", "TYPING");
 
 (() => {
   redisSubscriber.on("message", async (channel, payloadString) => {
@@ -71,44 +64,9 @@ kafkaConsumer.subscribe({
       const payload = JSON.parse(payloadString);
       if (!payload.chatId) return;
       io.to(payload.chatId).emit(ChatEventEnum.MESSAGE_RECEIVED_EVENT, payload);
-      await kafkaProducer.send({
-        topic: "MESSAGES",
-        messages: [
-          {
-            value: JSON.stringify(payload),
-          },
-        ],
-      });
+      await messageQueue.add("MESSAGES", payload);
     }
   });
 })();
-
-(async () => {
-  await kafkaConsumer.run({
-    eachMessage: async ({ topic, partition, message, pause }) => {
-      try {
-        const data = JSON.parse(message.value?.toString() || "");
-
-        await Message.create({
-          content: data.message,
-          chatId: data.chatId,
-          sender: data.sender,
-        });
-      } catch (error) {
-        console.error("Error while inserting message into database: ", error);
-        pause();
-        setTimeout(() => {
-          kafkaConsumer.resume([
-            {
-              topic: "MESSAGES",
-            },
-          ]);
-        }, 5000);
-      }
-    },
-  });
-})().catch((err) => {
-  console.error("Error while consuming messages: ", err);
-});
 
 export { httpServer };

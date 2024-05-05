@@ -1,3 +1,5 @@
+// ? Not use anymore....
+
 import { Kafka } from "kafkajs";
 
 const kafka = new Kafka({
