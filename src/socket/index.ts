@@ -19,32 +19,40 @@ const mountJoinChatEvent = (socket: Socket): void => {
   socket.on(ChatEventEnum.JOIN_CHAT_EVENT, (chatId) => {
     console.log("User joined a chat: ", chatId);
     socket.join(chatId);
+    mountUserOnlineEvent(socket); // User joined, so emit online event
     console.log("ChatRoom: ", socket.rooms);
   });
 };
 
 const mountLeaveChatEvent = (socket: Socket): void => {
   socket.on(ChatEventEnum.LEAVE_CHAT_EVENT, (chatId) => {
-    console.log("User leaved a chat: ", chatId);
+    console.log("User left a chat: ", chatId);
     socket.leave(chatId);
+    mountUserOfflineEvent(socket); // User left, so emit offline event
     console.log("ChatRoom: ", socket.rooms);
   });
 };
 
 const mountUserTypingEvent = (socket: Socket): void => {
   socket.on(ChatEventEnum.TYPING_EVENT, (payload) => {
-    // TODO: scale typing event for different servers
-
     socket.in(payload.chatId).emit(ChatEventEnum.TYPING_EVENT, payload);
   });
 };
 
 const mountUserTypingStopEvent = (socket: Socket): void => {
   socket.on(ChatEventEnum.STOP_TYPING_EVENT, (chatId) => {
-    // TODO: scale stop typing event for different servers
-
     socket.in(chatId).emit(ChatEventEnum.STOP_TYPING_EVENT, chatId);
   });
+};
+
+const mountUserOnlineEvent = (socket: Socket): void => {
+  // Emit user online event to all other users
+  socket.broadcast.emit(ChatEventEnum.USER_ONLINE_EVENT, socket.user._id);
+};
+
+const mountUserOfflineEvent = (socket: Socket): void => {
+  // Emit user offline event to all other users
+  socket.broadcast.emit(ChatEventEnum.USER_OFFLINE_EVENT, socket.user._id);
 };
 
 const initializeSocketIO = (io: Server) => {
@@ -85,10 +93,14 @@ const initializeSocketIO = (io: Server) => {
         redisPublisher.publish("MESSAGES", JSON.stringify(payload));
       });
 
+      // Emit user online event
+      socket.emit('connect', {});
+
       socket.on(ChatEventEnum.DISCONNECT_EVENT, () => {
         console.log("User disconnected userId: ", socket.user._id.toString());
         if (socket.user._id) {
           socket.leave(socket.user._id);
+          mountUserOfflineEvent(socket); // Emit offline event on disconnect
         }
       });
     } catch (error: any) {
