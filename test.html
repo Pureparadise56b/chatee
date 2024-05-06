@@ -57,7 +57,7 @@
 
     const sendMessageToFrontend = (payload) => {
       const p = document.createElement("p");
-      p.innerText = `${payload.user}: ${payload.message}`;
+      p.innerText = `${payload.user}: ${payload.content}`;
       messages.appendChild(p);
     };
 
@@ -96,6 +96,7 @@
       socket.emit("sendMessage", {
         chatId: "662d437d60be99b82d8543ff",
         content: message,
+        user,
       });
     });
 
@@ -132,7 +133,7 @@
     });
 
     socket.on("socketError", (error) => {
-      console.error(error);
+      console.error("Socket Error :: ", error);
     });
 
     socket.on("messageReceived", (payload) => {

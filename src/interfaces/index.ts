@@ -35,13 +35,18 @@ export interface MessageInterface extends Document {
   chatId: Types.ObjectId;
 }
 
-export interface decodedDataInterface extends JwtPayload {
-  id: string;
-  isUsernameSet: boolean;
-}
-
 export interface CustomeSocket extends RemoteSocket<any, any> {
   user: UserInterface;
+}
+
+interface decodedDataInterface extends JwtPayload {
+  id: string;
+  username: string;
+  isUsernameSet: boolean;
+  phoneNumber: string;
+  isCurrentlyLogin: boolean;
+  accountVerified: boolean;
+  role: string;
 }
 
 interface requestUserInterface {

@@ -56,8 +56,13 @@ const userSchema = new Schema<UserInterface>(
 
 userSchema.methods.generateAccessToken = function () {
   const payload = {
-    id: this._id,
+    _id: this._id,
+    username: this.username,
     isUsernameSet: this.isUsernameSet,
+    phoneNumber: this.phoneNumber,
+    isCurrentlyLogin: this.isCurrentlyLogin,
+    accountVerified: this.accountVerified,
+    role: this.role,
   };
   return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET!);
 };

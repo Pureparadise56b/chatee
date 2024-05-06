@@ -1,10 +1,9 @@
 import { AsyncHandler } from "../utils/AsyncHandler.util";
 import { ApiError } from "../utils/ApiError.util";
 import jwt from "jsonwebtoken";
-import { User } from "../models/user.model";
-import { UserInterface, decodedDataInterface } from "../interfaces";
+import { UserInterface } from "../interfaces";
 
-// modify the request object and inclue user object into it
+// modify the request object and include user object into it
 declare global {
   namespace Express {
     interface Request {
@@ -20,12 +19,10 @@ export const JWTVerify = AsyncHandler(async (req, res, next) => {
 
   if (!token) throw new ApiError(400, "Access token is required");
 
-  const decodedData: decodedDataInterface = jwt.verify(
+  const user = jwt.verify(
     token,
     process.env.ACCESS_TOKEN_SECRET!
-  ) as decodedDataInterface;
-
-  const user = await User.findById(decodedData.id);
+  ) as UserInterface;
 
   if (!user) throw new ApiError(401, "Invalid access token");
 

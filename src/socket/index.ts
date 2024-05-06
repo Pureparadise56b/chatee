@@ -1,12 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { ApiError } from "../utils/ApiError.util";
 import jwt from "jsonwebtoken";
-import {
-  UserInterface,
-  decodedDataInterface,
-  CustomeSocket,
-} from "../interfaces";
-import { User } from "../models/user.model";
+import { UserInterface, CustomeSocket } from "../interfaces";
 import { ChatEventEnum } from "../constants";
 import { Request } from "express";
 import { createRedisClient } from "../redis/config.redis";
@@ -77,12 +72,10 @@ const initializeSocketIO = (io: Server) => {
       if (!token)
         throw new ApiError(400, "Token is required to initialize socket");
 
-      const decodedData: decodedDataInterface = jwt.verify(
+      const user = jwt.verify(
         token,
         process.env.ACCESS_TOKEN_SECRET!
-      ) as decodedDataInterface;
-
-      const user = await User.findById(decodedData.id);
+      ) as UserInterface;
 
       if (!user) throw new ApiError(401, "Invalid access token");
 
