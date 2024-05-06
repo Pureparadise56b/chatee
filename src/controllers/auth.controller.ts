@@ -124,9 +124,9 @@ const resendOtp = AsyncHandler(async (req, res) => {
 });
 
 const logoutUser = AsyncHandler(async (req, res) => {
-  const { id } = req.user as UserInterface;
+  const { _id } = req.user as UserInterface;
 
-  const user = await User.findById(id);
+  const user = await User.findById(_id);
 
   if (!user?.isCurrentlyLogin) throw new ApiError(400, "User already logout");
 

@@ -52,9 +52,9 @@ const commonAggregation = () => {
 };
 
 const getAllChats = AsyncHandler(async (req, res) => {
-  const { id } = req.user as UserInterface;
+  const { _id } = req.user as UserInterface;
 
-  const mongooseId = new mongoose.Types.ObjectId(id);
+  const mongooseId = new mongoose.Types.ObjectId(_id);
 
   const chats = await Chat.aggregate([
     {
@@ -91,7 +91,7 @@ const getOrCreateOneonOneChat = AsyncHandler(async (req, res) => {
 
   if (!receiver) throw new ApiError(400, "Receiver doesn't exist");
 
-  const mongooseUserId = new mongoose.Types.ObjectId(req.user?.id);
+  const mongooseUserId = new mongoose.Types.ObjectId(req.user?._id);
   const mongooseReceiverId = new mongoose.Types.ObjectId(receiverId);
 
   const chat = await Chat.aggregate([
@@ -119,8 +119,8 @@ const getOrCreateOneonOneChat = AsyncHandler(async (req, res) => {
 
   const createdChatInstance = await Chat.create({
     chatName: "One on One",
-    members: [receiverId, req.user?.id],
-    admin: req.user?.id,
+    members: [receiverId, req.user?._id],
+    admin: req.user?._id,
   });
 
   if (!createdChatInstance)
@@ -138,7 +138,7 @@ const getOrCreateOneonOneChat = AsyncHandler(async (req, res) => {
   const payload = createdChat[0];
 
   payload.members.forEach((member: { _id: string }) => {
-    if (member._id == req.user?.id) return;
+    if (member._id == req.user?._id) return;
 
     emitSocketEvent(
       req,

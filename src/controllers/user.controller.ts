@@ -6,10 +6,10 @@ import { zodUserSchema } from "../zod/schema.zod";
 import { UserInterface } from "../interfaces";
 
 const setUsername = AsyncHandler(async (req, res) => {
-  const { id } = req.user as UserInterface;
+  const { _id } = req.user as UserInterface;
   const { username } = req.body;
 
-  const user = await User.findById(id);
+  const user = await User.findById(_id);
 
   if (user?.isUsernameSet) throw new ApiError(400, "User name already set");
 
@@ -63,9 +63,9 @@ const getAvailableNumbers = AsyncHandler(async (req, res) => {
 });
 
 const getUserDetails = AsyncHandler(async (req, res) => {
-  const { id } = req.user as UserInterface;
+  const { _id } = req.user as UserInterface;
 
-  const user = await User.findById(id);
+  const user = await User.findById(_id);
 
   res.status(200).json(new ApiResponse(200, "User fetched successfully", user));
 });

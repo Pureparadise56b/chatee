@@ -16,7 +16,7 @@ const fetchAllMessages = AsyncHandler(async (req, res) => {
 
   if (!chat) throw new ApiError(400, "Chat does not exist");
 
-  if (!chat.members.includes(req.user?.id))
+  if (!chat.members.includes(req.user?._id))
     throw new ApiError(400, "User is not the member of this chat");
 
   const messages = await Message.aggregate([
@@ -67,7 +67,7 @@ const deleteMessage = AsyncHandler(async (req, res) => {
 
   if (!message) throw new ApiError(400, "Message does not exist");
 
-  if (message.sender.toString() !== req.user?.id)
+  if (message.sender.toString() !== req.user?._id)
     throw new ApiError(401, "User can't delete this message");
 
   await Message.findOneAndDelete({ _id: messageId, chatId });
