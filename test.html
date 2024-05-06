@@ -78,7 +78,7 @@
       button1.style.cursor = "default";
       button1.disabled = false;
       socket.emit("leaveChat", "abcd");
-      socket.emit("joinChat", "1234");
+      socket.emit("joinChat", "662d437d60be99b82d8543ff");
     });
 
     document.getElementById("joinRoom2").addEventListener("click", () => {
@@ -87,13 +87,16 @@
       button2.disabled = false;
       button1.style.cursor = "no-drop";
       button1.disabled = true;
-      socket.emit("leaveChat", "1234");
+      socket.emit("leaveChat", "662d437d60be99b82d8543ff");
       socket.emit("joinChat", "abcd");
     });
 
     button1.addEventListener("click", () => {
       const message = fetchMessage();
-      socket.emit("sendMessage", { chatId: "1234", message, user });
+      socket.emit("sendMessage", {
+        chatId: "662d437d60be99b82d8543ff",
+        content: message,
+      });
     });
 
     button2.addEventListener("click", () => {
@@ -120,6 +123,12 @@
 
     socket.on("newChat", (payload) => {
       console.log("hi");
+    });
+
+    // When a user joins a chat
+    socket.on("userOnline", (userId) => {
+      console.log(`User ${userId} is online`);
+      // Update UI to indicate that the user is online
     });
 
     socket.on("socketError", (error) => {

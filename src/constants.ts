@@ -22,5 +22,5 @@ export const ChatEventEnum = Object.freeze({
   TYPING_EVENT: "typing",
   MESSAGE_DELETE_EVENT: "messageDeleted",
   USER_ONLINE_EVENT: "userOnline",
-  USER_OFFLINE_EVENT: "userOffline", // Added userOffline event
+  USER_OFFLINE_EVENT: "userOffline",
 });

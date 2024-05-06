@@ -1,5 +1,6 @@
 import { Document, Types } from "mongoose";
 import { JwtPayload } from "jsonwebtoken";
+import { RemoteSocket } from "socket.io";
 
 interface ProfileInterface {
   publicId: string;
@@ -37,6 +38,10 @@ export interface MessageInterface extends Document {
 export interface decodedDataInterface extends JwtPayload {
   id: string;
   isUsernameSet: boolean;
+}
+
+export interface CustomeSocket extends RemoteSocket<any, any> {
+  user: UserInterface;
 }
 
 interface requestUserInterface {

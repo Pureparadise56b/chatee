@@ -1,7 +1,11 @@
 import { Server, Socket } from "socket.io";
 import { ApiError } from "../utils/ApiError.util";
 import jwt from "jsonwebtoken";
-import { UserInterface, decodedDataInterface } from "../interfaces";
+import {
+  UserInterface,
+  decodedDataInterface,
+  CustomeSocket,
+} from "../interfaces";
 import { User } from "../models/user.model";
 import { ChatEventEnum } from "../constants";
 import { Request } from "express";
@@ -15,11 +19,11 @@ declare module "socket.io" {
 
 const redisPublisher = createRedisClient();
 
-const mountJoinChatEvent = (socket: Socket): void => {
+const mountJoinChatEvent = (socket: Socket, io: Server): void => {
   socket.on(ChatEventEnum.JOIN_CHAT_EVENT, (chatId) => {
     console.log("User joined a chat: ", chatId);
     socket.join(chatId);
-    mountUserOnlineEvent(socket); // User joined, so emit online event
+    mountUserOnlineEvent(io, chatId);
     console.log("ChatRoom: ", socket.rooms);
   });
 };
@@ -28,7 +32,7 @@ const mountLeaveChatEvent = (socket: Socket): void => {
   socket.on(ChatEventEnum.LEAVE_CHAT_EVENT, (chatId) => {
     console.log("User left a chat: ", chatId);
     socket.leave(chatId);
-    mountUserOfflineEvent(socket); // User left, so emit offline event
+    // mountUserOfflineEvent(socket, chatId);
     console.log("ChatRoom: ", socket.rooms);
   });
 };
@@ -45,15 +49,21 @@ const mountUserTypingStopEvent = (socket: Socket): void => {
   });
 };
 
-const mountUserOnlineEvent = (socket: Socket): void => {
-  // Emit user online event to all other users
-  socket.broadcast.emit(ChatEventEnum.USER_ONLINE_EVENT, socket.user._id);
+const mountUserOnlineEvent = async (
+  io: Server,
+  chatId: string
+): Promise<void> => {
+  const onlineUsers = [];
+  const sockets = (await io.in(chatId).fetchSockets()) as CustomeSocket[];
+  for (const singleSocket of sockets) {
+    onlineUsers.push(singleSocket.user._id);
+  }
+  io.to(chatId).emit(ChatEventEnum.USER_ONLINE_EVENT, onlineUsers);
 };
 
-const mountUserOfflineEvent = (socket: Socket): void => {
-  // Emit user offline event to all other users
-  socket.broadcast.emit(ChatEventEnum.USER_OFFLINE_EVENT, socket.user._id);
-};
+// const mountUserOfflineEvent = (socket: Socket, chatId: string): void => {
+//   socket.to(chatId).emit(ChatEventEnum.USER_OFFLINE_EVENT, socket.user._id);
+// };
 
 const initializeSocketIO = (io: Server) => {
   return io.on("connection", async (socket) => {
@@ -84,7 +94,7 @@ const initializeSocketIO = (io: Server) => {
       console.log("\nUser connected...", user._id.toString());
       console.log("ChatRoom: ", socket.rooms);
 
-      mountJoinChatEvent(socket);
+      mountJoinChatEvent(socket, io);
       mountUserTypingEvent(socket);
       mountUserTypingStopEvent(socket);
       mountLeaveChatEvent(socket);
@@ -97,7 +107,6 @@ const initializeSocketIO = (io: Server) => {
         console.log("User disconnected userId: ", socket.user._id.toString());
         if (socket.user._id) {
           socket.leave(socket.user._id);
-          mountUserOfflineEvent(socket); // Emit offline event on disconnect
         }
       });
     } catch (error: any) {
