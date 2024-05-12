@@ -25,31 +25,56 @@ const setUsername = AsyncHandler(async (req, res) => {
 });
 
 const getAvailableNumbers = AsyncHandler(async (req, res) => {
-  const { allNumbers } = req.body;
+  let allNumbers: string[] = req.body.allNumbers;
 
-  const availableNumbers = await User.aggregate([
-    {
-      $match: {
-        phoneNumber: { $in: allNumbers },
-      },
-    },
-    {
-      $project: {
-        phoneNumber: 1,
-        isRegistered: { $literal: true },
-      },
-    },
-  ]);
+  allNumbers = allNumbers.filter((item) => item !== req.user?.phoneNumber);
 
-  res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        "Available numbers fetched successfully.",
-        availableNumbers
-      )
+  const numbersHasCache = await redisGlobalClient.get(
+    `users:available_numbers:${req.user?._id}`
+  );
+
+  if (numbersHasCache) {
+    const cachedNumbers = JSON.parse(numbersHasCache);
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          "Available numbers fetched successfully.",
+          cachedNumbers
+        )
+      );
+  } else {
+    const availableNumbers = await User.aggregate([
+      {
+        $match: {
+          phoneNumber: { $in: allNumbers },
+        },
+      },
+      {
+        $project: {
+          phoneNumber: 1,
+          isRegistered: { $literal: true },
+        },
+      },
+    ]);
+
+    await redisGlobalClient.setex(
+      `users:available_numbers:${req.user?._id}`,
+      120,
+      JSON.stringify(availableNumbers)
     );
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          "Available numbers fetched successfully.",
+          availableNumbers
+        )
+      );
+  }
 });
 
 const getUserDetails = AsyncHandler(async (req, res) => {

@@ -1,7 +1,7 @@
 import { Server, Socket } from "socket.io";
 import { ApiError } from "../utils/ApiError.util";
 import jwt from "jsonwebtoken";
-import { UserInterface, CustomeSocket } from "../interfaces";
+import { UserInterface } from "../interfaces";
 import { ChatEventEnum } from "../constants";
 import { Request } from "express";
 import { createRedisClient } from "../redis/config.redis";

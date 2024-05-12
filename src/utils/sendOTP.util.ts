@@ -13,7 +13,7 @@ export const sendOTP = async (otp: string, phoneNumber: string) => {
 
     const response = await client.messages.create({
       body: `Your Chatee App verification code is: ${otp}`,
-      from: "+16562269634",
+      from: process.env.TWILIO_NUMBER,
       to: phoneNumber,
     });
 

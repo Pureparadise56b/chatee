@@ -6,7 +6,7 @@ const createOrGetChatValidation = () => {
     param("receiverId")
       .notEmpty()
       .withMessage("ReceiverId must be provided")
-      .customSanitizer((value) => mongoose.isValidObjectId(value))
+      .custom((value) => mongoose.isValidObjectId(value))
       .withMessage("Please give a valid receiverId"),
   ];
 };

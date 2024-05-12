@@ -6,12 +6,9 @@ const connection = createRedisClient();
 
 export const messageQueue = new Queue("MESSAGES", {
   connection,
-  defaultJobOptions: {
-    delay: 2000,
-  },
 });
 
-export const queueWorker = new Worker(
+const queueWorker = new Worker(
   "MESSAGES",
   async (job) => {
     try {

@@ -3,7 +3,6 @@ import { ApiError } from "../utils/ApiError.util";
 import { ApiResponse } from "../utils/ApiResponse.util";
 import { Chat } from "../models/chat.model";
 import { UserInterface } from "../interfaces";
-import { Message } from "../models/message.model";
 import mongoose from "mongoose";
 import { User } from "../models/user.model";
 import { emitSocketEvent } from "../socket";

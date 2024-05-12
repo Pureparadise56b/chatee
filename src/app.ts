@@ -56,14 +56,14 @@ app.get("/", (req, res) => {
 initializeSocketIO(io);
 
 const redisSubscriber = createRedisClient();
-redisSubscriber.subscribe("MESSAGES", "TYPING");
+redisSubscriber.subscribe("MESSAGES");
 
-(() => {
+(async () => {
   redisSubscriber.on("message", async (channel, payloadString) => {
     if (channel === "MESSAGES") {
       const payload = JSON.parse(payloadString);
       if (!payload.chatId) return;
-      io.to(payload.chatId).emit(ChatEventEnum.MESSAGE_RECEIVED_EVENT, payload);
+      io.emit(ChatEventEnum.MESSAGE_RECEIVED_EVENT, payload);
       await messageQueue.add("MESSAGES", payload);
     }
   });
