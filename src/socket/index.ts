@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import { UserInterface } from "../interfaces";
 import { ChatEventEnum } from "../constants";
 import { Request } from "express";
-import { createRedisClient } from "../redis/config.redis";
+import { createRedisClient, redisGlobalClient } from "../redis/config.redis";
 
 declare module "socket.io" {
   export interface Socket {
@@ -42,9 +42,17 @@ const mountUserTypingStopEvent = (socket: Socket): void => {
   });
 };
 
-const mountUserOnlineEvent = (): void => {};
-
-const mountUserOfflineEvent = (): void => {};
+const mountIsReceiverOnlineEvent = (socket: Socket): void => {
+  socket.on(ChatEventEnum.GET_RECEIVER_STATUS, async (payload) => {
+    const receiverStatus = await redisGlobalClient.get(
+      `users:online:${payload.receiverId}`
+    );
+    socket.emit(ChatEventEnum.IS_RECEIVER_ONLINE_EVENT, {
+      ...payload,
+      receiverStatus,
+    });
+  });
+};
 
 const initializeSocketIO = (io: Server) => {
   return io.on("connection", async (socket) => {
@@ -70,6 +78,8 @@ const initializeSocketIO = (io: Server) => {
       socket.join(user._id.toString());
       socket.emit(ChatEventEnum.CONNECTED_EVENT);
 
+      await redisGlobalClient.set(`users:online:${socket.user._id}`, 1);
+
       console.log("\nUser connected...", user._id.toString());
       console.log("ChatRoom: ", socket.rooms);
 
@@ -77,18 +87,21 @@ const initializeSocketIO = (io: Server) => {
       mountUserTypingEvent(socket);
       mountUserTypingStopEvent(socket);
       mountLeaveChatEvent(socket);
+      mountIsReceiverOnlineEvent(socket);
 
       socket.on(ChatEventEnum.MESSAAGE_SEND_EVENT, (payload) => {
         redisPublisher.publish("MESSAGES", JSON.stringify(payload));
       });
 
-      socket.on(ChatEventEnum.DISCONNECT_EVENT, () => {
+      socket.on(ChatEventEnum.DISCONNECT_EVENT, async () => {
         console.log("User disconnected userId: ", socket.user._id.toString());
         if (socket.user._id) {
           socket.leave(socket.user._id);
+          await redisGlobalClient.set(`users:online:${socket.user._id}`, 0);
         }
       });
     } catch (error: any) {
+      await redisGlobalClient.set(`users:online:${socket.user._id}`, 0);
       socket.emit(
         ChatEventEnum.SOCKET_ERROR_EVENT,
         error?.message || "Something went wrong while connecting to the socket"
