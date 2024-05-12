@@ -83,10 +83,6 @@ const getAllChats = AsyncHandler(async (req, res) => {
 const getOrCreateOneonOneChat = AsyncHandler(async (req, res) => {
   const { receiverId } = req.params;
 
-  const isReceiverValid = mongoose.isValidObjectId(receiverId);
-
-  if (!isReceiverValid) throw new ApiError(400, "ReceiverId is not valid");
-
   const receiver = await User.findById(receiverId);
 
   if (!receiver) throw new ApiError(400, "Receiver doesn't exist");

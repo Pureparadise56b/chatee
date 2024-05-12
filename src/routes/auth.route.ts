@@ -9,7 +9,6 @@ import {
   userRegistrationValidator,
   verifyUserValidation,
 } from "../validators/auth.validator";
-import { JWTVerify } from "../middlewares/auth.middleware";
 import { validate } from "../validate";
 
 const router = express.Router();

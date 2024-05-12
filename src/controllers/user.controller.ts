@@ -2,8 +2,8 @@ import { AsyncHandler } from "../utils/AsyncHandler.util";
 import { ApiResponse } from "../utils/ApiResponse.util";
 import { ApiError } from "../utils/ApiError.util";
 import { User } from "../models/user.model";
-import { zodUserSchema } from "../zod/schema.zod";
 import { UserInterface } from "../interfaces";
+import { redisGlobalClient } from "../redis/config.redis";
 
 const setUsername = AsyncHandler(async (req, res) => {
   const { _id } = req.user as UserInterface;
@@ -13,15 +13,8 @@ const setUsername = AsyncHandler(async (req, res) => {
 
   if (user?.isUsernameSet) throw new ApiError(400, "User name already set");
 
-  const parsedUsername = zodUserSchema.safeParse(username);
-
-  if (!parsedUsername.success) {
-    const errorMessage = parsedUsername.error.errors[0].message;
-    throw new ApiError(400, errorMessage);
-  }
-
   if (user) {
-    user.username = parsedUsername.data || "";
+    user.username = username;
     user.isUsernameSet = true;
     await user.save();
   }
@@ -33,9 +26,6 @@ const setUsername = AsyncHandler(async (req, res) => {
 
 const getAvailableNumbers = AsyncHandler(async (req, res) => {
   const { allNumbers } = req.body;
-
-  if (!allNumbers || allNumbers.length === 0)
-    throw new ApiError(400, "Numbers are required");
 
   const availableNumbers = await User.aggregate([
     {
@@ -65,9 +55,26 @@ const getAvailableNumbers = AsyncHandler(async (req, res) => {
 const getUserDetails = AsyncHandler(async (req, res) => {
   const { _id } = req.user as UserInterface;
 
-  const user = await User.findById(_id);
+  const userHasCache = await redisGlobalClient.get(`users:details:${_id}`);
 
-  res.status(200).json(new ApiResponse(200, "User fetched successfully", user));
+  if (userHasCache) {
+    const cachedUser = JSON.parse(userHasCache);
+    res
+      .status(200)
+      .json(new ApiResponse(200, "User fetched successfully", cachedUser));
+  } else {
+    const actualUser = await User.findById(_id);
+
+    await redisGlobalClient.setex(
+      `users:details:${_id}`,
+      3600,
+      JSON.stringify(actualUser)
+    );
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, "User fetched successfully", actualUser));
+  }
 });
 
 export { setUsername, getAvailableNumbers, getUserDetails };

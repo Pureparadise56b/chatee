@@ -17,6 +17,9 @@ declare global {
 export const JWTVerify = AsyncHandler(async (req, res, next) => {
   const header = req.headers["authorization"] || "";
 
+  if (!header || !header.startsWith("Bearer"))
+    throw new ApiError(400, "Authorization header is required");
+
   const token = header.split(" ")[1];
 
   if (!token) throw new ApiError(400, "Access token is required");
@@ -28,7 +31,9 @@ export const JWTVerify = AsyncHandler(async (req, res, next) => {
 
   if (!decodedToken) throw new ApiError(400, "Invalid token");
 
-  const userHasCache = await redisGlobalClient.get(`users:${decodedToken._id}`);
+  const userHasCache = await redisGlobalClient.get(
+    `users:auth:${decodedToken._id}`
+  );
 
   if (userHasCache) {
     req.user = JSON.parse(userHasCache);
@@ -39,7 +44,7 @@ export const JWTVerify = AsyncHandler(async (req, res, next) => {
     if (!actualUser) throw new ApiError(400, "Invalid token");
 
     await redisGlobalClient.setex(
-      `users:${decodedToken._id}`,
+      `users:auth:${decodedToken._id}`,
       7200,
       JSON.stringify(actualUser)
     );

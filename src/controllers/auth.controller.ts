@@ -2,10 +2,8 @@ import { AsyncHandler } from "../utils/AsyncHandler.util";
 import { ApiResponse } from "../utils/ApiResponse.util";
 import { ApiError } from "../utils/ApiError.util";
 import { User } from "../models/user.model";
-import { zodPhoneNumberSchema, zodUserSchema } from "../zod/schema.zod";
 import { USER_REGISTER_TYPE } from "../constants";
 import { sendOTP } from "../utils/sendOTP.util";
-import { UserInterface } from "../interfaces";
 
 const generateOtp = () => {
   const charecters = "01234567890";
@@ -89,12 +87,6 @@ const verifyUser = AsyncHandler(async (req, res) => {
 
 const resendOtp = AsyncHandler(async (req, res) => {
   const { phoneNumber } = req.body;
-  const parsedPhoneNumber = zodPhoneNumberSchema.safeParse(phoneNumber);
-
-  if (!parsedPhoneNumber.success) {
-    const errorMessage = parsedPhoneNumber.error.errors[0].message;
-    throw new ApiError(400, errorMessage);
-  }
 
   const user = await User.findOne({ phoneNumber });
 

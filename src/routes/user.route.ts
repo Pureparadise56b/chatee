@@ -5,13 +5,20 @@ import {
   getAvailableNumbers,
   getUserDetails,
 } from "../controllers/user.controller";
+import {
+  availableNumbersValidator,
+  setUsernameValidator,
+} from "../validators/user.validator";
+import { validate } from "../validate";
 
 const router = express.Router();
 
 router.use(JWTVerify);
 
-router.route("/username").post(setUsername);
+router.route("/username").post(setUsernameValidator(), validate, setUsername);
 router.route("/").get(getUserDetails);
-router.route("/check/numbers").post(getAvailableNumbers);
+router
+  .route("/check/numbers")
+  .post(availableNumbersValidator(), validate, getAvailableNumbers);
 
 export default router;

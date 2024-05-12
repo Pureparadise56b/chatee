@@ -4,12 +4,16 @@ import {
   getAllChats,
   getOrCreateOneonOneChat,
 } from "../controllers/chat.controller";
+import { createOrGetChatValidation } from "../validators/chat.validator";
+import { validate } from "../validate";
 
 const router = express.Router();
 
 router.use(JWTVerify);
 
 router.route("/").get(getAllChats);
-router.route("/:receiverId").post(getOrCreateOneonOneChat);
+router
+  .route("/:receiverId")
+  .post(createOrGetChatValidation(), validate, getOrCreateOneonOneChat);
 
 export default router;
