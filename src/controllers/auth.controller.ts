@@ -20,15 +20,8 @@ const generateOtp = () => {
 const loginUser = AsyncHandler(async (req, res) => {
   const { phoneNumber } = req.body;
 
-  const parsedPhoneNumber = zodPhoneNumberSchema.safeParse(phoneNumber);
-
-  if (!parsedPhoneNumber.success) {
-    const errorMessage = parsedPhoneNumber.error.errors[0].message;
-    throw new ApiError(400, errorMessage);
-  }
-
   const existingUser = await User.findOne({
-    phoneNumber: parsedPhoneNumber.data,
+    phoneNumber: phoneNumber,
   });
 
   if (existingUser) {
@@ -39,19 +32,19 @@ const loginUser = AsyncHandler(async (req, res) => {
     existingUser.otp = otp;
     existingUser.otpExpiry = new Date(Date.now() + 1000 * 60 * 60);
     await existingUser.save();
-    sendOTP(otp, parsedPhoneNumber.data);
+    sendOTP(otp, phoneNumber);
     return res
       .status(200)
       .json(new ApiResponse(201, "User logged in successfully"));
   } else {
     const otp = generateOtp();
     const createdUser = await User.create({
-      phoneNumber: parsedPhoneNumber.data,
+      phoneNumber: phoneNumber,
       registerType: USER_REGISTER_TYPE.LOCAL,
       otp,
       otpExpiry: new Date(Date.now() + 1000 * 60 * 60),
     });
-    sendOTP(otp, parsedPhoneNumber.data);
+    sendOTP(otp, phoneNumber);
 
     if (!createdUser) throw new ApiError(500, "Error while creating user");
   }
@@ -69,9 +62,6 @@ const loginUser = AsyncHandler(async (req, res) => {
 const verifyUser = AsyncHandler(async (req, res) => {
   const { otp, phoneNumber } = req.body;
 
-  if (!otp || !phoneNumber)
-    throw new ApiError(400, "OTP and phone number is required");
-
   const user = await User.findOne({ phoneNumber });
 
   if (!user) throw new ApiError(404, "User not found");
@@ -85,7 +75,6 @@ const verifyUser = AsyncHandler(async (req, res) => {
     user.accountVerified = true;
   }
 
-  user.isCurrentlyLogin = true;
   user.otp = undefined;
   user.otpExpiry = undefined;
   await user.save();
@@ -123,18 +112,4 @@ const resendOtp = AsyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "New OTP generated successfully"));
 });
 
-const logoutUser = AsyncHandler(async (req, res) => {
-  const { _id } = req.user as UserInterface;
-
-  const user = await User.findById(_id);
-
-  if (!user?.isCurrentlyLogin) throw new ApiError(400, "User already logout");
-
-  user.isCurrentlyLogin = false;
-
-  await user.save();
-
-  res.status(200).json(new ApiResponse(200, "User logout successfully"));
-});
-
-export { loginUser, verifyUser, resendOtp, logoutUser };
+export { loginUser, verifyUser, resendOtp };

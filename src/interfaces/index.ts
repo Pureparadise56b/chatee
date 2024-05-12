@@ -11,7 +11,6 @@ export interface UserInterface extends Document {
   username: string;
   isUsernameSet: boolean;
   phoneNumber: string;
-  isCurrentlyLogin: boolean;
   profile: ProfileInterface;
   registerType: string;
   role: string;
@@ -39,14 +38,8 @@ export interface CustomeSocket extends RemoteSocket<any, any> {
   user: UserInterface;
 }
 
-interface decodedDataInterface extends JwtPayload {
-  id: string;
-  username: string;
-  isUsernameSet: boolean;
-  phoneNumber: string;
-  isCurrentlyLogin: boolean;
-  accountVerified: boolean;
-  role: string;
+export interface decodedDataInterface extends JwtPayload {
+  _id: string;
 }
 
 interface requestUserInterface {

@@ -1,17 +1,23 @@
 import express from "express";
 import {
   loginUser,
-  logoutUser,
   resendOtp,
   verifyUser,
 } from "../controllers/auth.controller";
+import {
+  resendOtpValidation,
+  userRegistrationValidator,
+  verifyUserValidation,
+} from "../validators/auth.validator";
 import { JWTVerify } from "../middlewares/auth.middleware";
+import { validate } from "../validate";
 
 const router = express.Router();
 
-router.route("/login").post(loginUser);
-router.route("/login/verify").post(verifyUser);
-router.route("/otp/resend").post(resendOtp);
-router.route("/logout").get(JWTVerify, logoutUser);
+router.route("/login").post(userRegistrationValidator(), validate, loginUser);
+router
+  .route("/login/verify")
+  .post(verifyUserValidation(), validate, verifyUser);
+router.route("/otp/resend").post(resendOtpValidation(), validate, resendOtp);
 
 export default router;

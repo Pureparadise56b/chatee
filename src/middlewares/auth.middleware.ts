@@ -1,7 +1,9 @@
 import { AsyncHandler } from "../utils/AsyncHandler.util";
 import { ApiError } from "../utils/ApiError.util";
 import jwt from "jsonwebtoken";
-import { UserInterface } from "../interfaces";
+import { UserInterface, decodedDataInterface } from "../interfaces";
+import { User } from "../models/user.model";
+import { redisGlobalClient } from "../redis/config.redis";
 
 // modify the request object and include user object into it
 declare global {
@@ -19,13 +21,30 @@ export const JWTVerify = AsyncHandler(async (req, res, next) => {
 
   if (!token) throw new ApiError(400, "Access token is required");
 
-  const user = jwt.verify(
+  const decodedToken = jwt.verify(
     token,
     process.env.ACCESS_TOKEN_SECRET!
-  ) as UserInterface;
+  ) as decodedDataInterface;
 
-  if (!user) throw new ApiError(401, "Invalid access token");
+  if (!decodedToken) throw new ApiError(400, "Invalid token");
 
-  req.user = user;
-  next();
+  const userHasCache = await redisGlobalClient.get(`users:${decodedToken._id}`);
+
+  if (userHasCache) {
+    req.user = JSON.parse(userHasCache);
+    next();
+  } else {
+    const actualUser = await User.findById(decodedToken._id);
+
+    if (!actualUser) throw new ApiError(400, "Invalid token");
+
+    await redisGlobalClient.setex(
+      `users:${decodedToken._id}`,
+      7200,
+      JSON.stringify(actualUser)
+    );
+
+    req.user = actualUser;
+    next();
+  }
 });

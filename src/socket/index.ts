@@ -18,7 +18,6 @@ const mountJoinChatEvent = (socket: Socket, io: Server): void => {
   socket.on(ChatEventEnum.JOIN_CHAT_EVENT, (chatId) => {
     console.log("User joined a chat: ", chatId);
     socket.join(chatId);
-    mountUserOnlineEvent(io, chatId);
     console.log("ChatRoom: ", socket.rooms);
   });
 };
@@ -27,7 +26,6 @@ const mountLeaveChatEvent = (socket: Socket): void => {
   socket.on(ChatEventEnum.LEAVE_CHAT_EVENT, (chatId) => {
     console.log("User left a chat: ", chatId);
     socket.leave(chatId);
-    // mountUserOfflineEvent(socket, chatId);
     console.log("ChatRoom: ", socket.rooms);
   });
 };
@@ -44,21 +42,9 @@ const mountUserTypingStopEvent = (socket: Socket): void => {
   });
 };
 
-const mountUserOnlineEvent = async (
-  io: Server,
-  chatId: string
-): Promise<void> => {
-  const onlineUsers = [];
-  const sockets = (await io.in(chatId).fetchSockets()) as CustomeSocket[];
-  for (const singleSocket of sockets) {
-    onlineUsers.push(singleSocket.user._id);
-  }
-  io.to(chatId).emit(ChatEventEnum.USER_ONLINE_EVENT, onlineUsers);
-};
+const mountUserOnlineEvent = (): void => {};
 
-// const mountUserOfflineEvent = (socket: Socket, chatId: string): void => {
-//   socket.to(chatId).emit(ChatEventEnum.USER_OFFLINE_EVENT, socket.user._id);
-// };
+const mountUserOfflineEvent = (): void => {};
 
 const initializeSocketIO = (io: Server) => {
   return io.on("connection", async (socket) => {

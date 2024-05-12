@@ -20,13 +20,9 @@ const userSchema = new Schema<UserInterface>(
       required: [true, "phone number is required"],
       unique: true,
       trim: true,
-      match: new RegExp("^[0-9]+$"),
-      maxlength: 10,
-      minlength: 10,
-    },
-    isCurrentlyLogin: {
-      type: Boolean,
-      default: false,
+      match: new RegExp("^\\+?[0-9]+$"),
+      maxlength: 14,
+      minlength: 13,
     },
     profile: {
       publicId: String,
@@ -57,12 +53,6 @@ const userSchema = new Schema<UserInterface>(
 userSchema.methods.generateAccessToken = function () {
   const payload = {
     _id: this._id,
-    username: this.username,
-    isUsernameSet: this.isUsernameSet,
-    phoneNumber: this.phoneNumber,
-    isCurrentlyLogin: this.isCurrentlyLogin,
-    accountVerified: this.accountVerified,
-    role: this.role,
   };
   return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET!);
 };
