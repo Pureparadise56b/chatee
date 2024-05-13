@@ -1,10 +1,11 @@
 import { Server, Socket } from "socket.io";
 import { ApiError } from "../utils/ApiError.util";
 import jwt from "jsonwebtoken";
-import { UserInterface } from "../interfaces";
+import { UserInterface, decodedDataInterface } from "../interfaces";
 import { ChatEventEnum } from "../constants";
 import { Request } from "express";
 import { createRedisClient, redisGlobalClient } from "../redis/config.redis";
+import { User } from "../models/user.model";
 
 declare module "socket.io" {
   export interface Socket {
@@ -58,6 +59,7 @@ const initializeSocketIO = (io: Server) => {
   return io.on("connection", async (socket) => {
     try {
       let token = socket.handshake.auth.token;
+      let user = null;
 
       if (!token) {
         token = socket.handshake.headers.token;
@@ -66,21 +68,31 @@ const initializeSocketIO = (io: Server) => {
       if (!token)
         throw new ApiError(400, "Token is required to initialize socket");
 
-      const user = jwt.verify(
+      const decodeData = jwt.verify(
         token,
         process.env.ACCESS_TOKEN_SECRET!
-      ) as UserInterface;
+      ) as decodedDataInterface;
 
-      if (!user) throw new ApiError(401, "Invalid access token");
+      if (!decodeData) throw new ApiError(401, "Invalid access token");
 
-      socket.user = user;
+      const userHasCache = await redisGlobalClient.get(
+        `users:auth:${decodeData._id}`
+      );
 
-      socket.join(user._id.toString());
+      if (userHasCache) {
+        socket.user = JSON.parse(userHasCache);
+      } else {
+        user = await User.findById(decodeData._id);
+        if (!user) throw new ApiError(400, "Invalid access token");
+        socket.user = user;
+      }
+
+      socket.join(socket.user._id.toString());
       socket.emit(ChatEventEnum.CONNECTED_EVENT);
 
       await redisGlobalClient.set(`users:online:${socket.user._id}`, 1);
 
-      console.log("\nUser connected...", user._id.toString());
+      console.log("\nUser connected...", socket.user._id.toString());
       console.log("ChatRoom: ", socket.rooms);
 
       mountJoinChatEvent(socket);
