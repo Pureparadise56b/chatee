@@ -113,7 +113,9 @@ const initializeSocketIO = (io: Server) => {
         }
       });
     } catch (error: any) {
-      await redisGlobalClient.set(`users:online:${socket.user._id}`, 0);
+      if (socket.user) {
+        await redisGlobalClient.set(`users:online:${socket.user?._id}`, 0);
+      }
       socket.emit(
         ChatEventEnum.SOCKET_ERROR_EVENT,
         error?.message || "Something went wrong while connecting to the socket"
