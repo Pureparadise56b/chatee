@@ -8,10 +8,6 @@ import { Chat } from "../models/chat.model";
 const fetchAllMessages = AsyncHandler(async (req, res) => {
   const { chatId } = req.params;
 
-  const isValidChatId = mongoose.isValidObjectId(chatId);
-
-  if (!isValidChatId) throw new ApiError(400, "Invalid ChatId");
-
   const chat = await Chat.findById(chatId);
 
   if (!chat) throw new ApiError(400, "Chat does not exist");
@@ -56,12 +52,6 @@ const fetchAllMessages = AsyncHandler(async (req, res) => {
 
 const deleteMessage = AsyncHandler(async (req, res) => {
   const { chatId, messageId } = req.params;
-
-  const isValidChatId = mongoose.isValidObjectId(chatId);
-  const isValidMessageId = mongoose.isValidObjectId(messageId);
-
-  if (!isValidChatId || !isValidMessageId)
-    throw new ApiError(400, "ChatId or MessageId is invalid");
 
   const message = await Message.findOne({ _id: messageId, chatId });
 

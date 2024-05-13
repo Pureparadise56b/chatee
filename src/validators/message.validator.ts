@@ -6,7 +6,7 @@ const fetchAllMessagesValidation = () => {
     param("chatId")
       .notEmpty()
       .withMessage("ChatId must be provided")
-      .customSanitizer((value) => mongoose.isValidObjectId(value))
+      .custom((value) => mongoose.isValidObjectId(value))
       .withMessage("Please give a valid chatId"),
   ];
 };
@@ -16,12 +16,12 @@ const deleteMessageValidation = () => {
     param("chatId")
       .notEmpty()
       .withMessage("ChatId must be provided")
-      .customSanitizer((value) => mongoose.isValidObjectId(value))
+      .custom((value) => mongoose.isValidObjectId(value))
       .withMessage("Please give a valid chatId"),
     param("messageId")
       .notEmpty()
       .withMessage("MessageId must be provided")
-      .customSanitizer((value) => mongoose.isValidObjectId(value))
+      .custom((value) => mongoose.isValidObjectId(value))
       .withMessage("Please give a valid messageId"),
   ];
 };
