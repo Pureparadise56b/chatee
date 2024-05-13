@@ -19,6 +19,12 @@ const setUsername = AsyncHandler(async (req, res) => {
     await user.save();
   }
 
+  await redisGlobalClient.setex(
+    `users:auth:${user?._id}`,
+    7200,
+    JSON.stringify(user)
+  );
+
   res
     .status(200)
     .json(new ApiResponse(200, "Username changed successfully", user));

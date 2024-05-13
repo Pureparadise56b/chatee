@@ -85,13 +85,13 @@
 
     setInterval(() => {
       socket.emit("getReceiverStatus", {
-        receiverId: "6640bad337014fe290dd9e4b",
+        receiverId: "66419189dc0d44886c77fe1d",
         chatId,
       });
     }, 3000);
 
     socket.on("typing", (payload) => {
-      userTyping.innerText = `${payload.user} is typing...`;
+      userTyping.innerText = `typing...`;
     });
 
     socket.on("stopTyping", (chatId) => {
@@ -131,7 +131,7 @@
       button1.style.cursor = "default";
       button1.disabled = false;
       socket.emit("leaveChat", "abcd");
-      socket.emit("joinChat", "662d437d60be99b82d8543ff");
+      socket.emit("joinChat", "1234");
     });
 
     document.getElementById("joinRoom2").addEventListener("click", () => {
@@ -140,14 +140,15 @@
       button2.disabled = false;
       button1.style.cursor = "no-drop";
       button1.disabled = true;
-      socket.emit("leaveChat", "662d437d60be99b82d8543ff");
+      socket.emit("leaveChat", "1234");
       socket.emit("joinChat", "abcd");
     });
 
     button1.addEventListener("click", () => {
       const message = fetchMessage();
+      if (!message) return;
       socket.emit("sendMessage", {
-        chatId: "662d437d60be99b82d8543ff",
+        chatId,
         content: message,
         user,
       });
@@ -155,12 +156,13 @@
 
     button2.addEventListener("click", () => {
       const message = fetchMessage();
-      socket.emit("sendMessage", { chatId: "abcd", message, user });
+      if (!message) return;
+      socket.emit("sendMessage", { chatId, content: message, user });
     });
 
     document.getElementById("message").addEventListener("input", () => {
       clearTimeout(typingTimer);
-      socket.emit("typing", { user, chatId });
+      socket.emit("typing", chatId);
 
       typingTimer = setTimeout(() => {
         socket.emit("stopTyping", chatId);

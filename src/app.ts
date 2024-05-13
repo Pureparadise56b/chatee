@@ -11,6 +11,7 @@ import { initializeSocketIO } from "./socket";
 import { createRedisClient } from "./redis/config.redis";
 import { messageQueue } from "./bullmq/mq.config";
 import { ChatEventEnum } from "./constants";
+import mongoose from "mongoose";
 
 const app = express();
 const httpServer = http.createServer(app);
@@ -62,8 +63,8 @@ redisSubscriber.subscribe("MESSAGES");
   redisSubscriber.on("message", async (channel, payloadString) => {
     if (channel === "MESSAGES") {
       const payload = JSON.parse(payloadString);
-      if (!payload.chatId) return;
-      io.emit(ChatEventEnum.MESSAGE_RECEIVED_EVENT, payload);
+      io.in(payload.chatId).emit(ChatEventEnum.MESSAGE_RECEIVED_EVENT, payload);
+      if (!payload.chatId || !mongoose.isValidObjectId(payload.chatId)) return;
       await messageQueue.add("MESSAGES", payload);
     }
   });

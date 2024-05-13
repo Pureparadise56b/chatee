@@ -14,7 +14,7 @@ declare module "socket.io" {
 
 const redisPublisher = createRedisClient();
 
-const mountJoinChatEvent = (socket: Socket, io: Server): void => {
+const mountJoinChatEvent = (socket: Socket): void => {
   socket.on(ChatEventEnum.JOIN_CHAT_EVENT, (chatId) => {
     console.log("User joined a chat: ", chatId);
     socket.join(chatId);
@@ -31,8 +31,8 @@ const mountLeaveChatEvent = (socket: Socket): void => {
 };
 
 const mountUserTypingEvent = (socket: Socket): void => {
-  socket.on(ChatEventEnum.TYPING_EVENT, (payload) => {
-    socket.in(payload.chatId).emit(ChatEventEnum.TYPING_EVENT, payload);
+  socket.on(ChatEventEnum.TYPING_EVENT, (chatId) => {
+    socket.in(chatId).emit(ChatEventEnum.TYPING_EVENT, chatId);
   });
 };
 
@@ -83,7 +83,7 @@ const initializeSocketIO = (io: Server) => {
       console.log("\nUser connected...", user._id.toString());
       console.log("ChatRoom: ", socket.rooms);
 
-      mountJoinChatEvent(socket, io);
+      mountJoinChatEvent(socket);
       mountUserTypingEvent(socket);
       mountUserTypingStopEvent(socket);
       mountLeaveChatEvent(socket);
