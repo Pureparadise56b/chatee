@@ -1,6 +1,7 @@
 import { Queue, Worker } from "bullmq";
 import { createRedisClient } from "../redis/config.redis";
 import { Message } from "../models/message.model";
+import { Chat } from "../models/chat.model";
 
 const connection = createRedisClient();
 
@@ -12,11 +13,19 @@ const queueWorker = new Worker(
   "MESSAGES",
   async (job) => {
     try {
-      await Message.create({
+      const createdMessage = await Message.create({
         content: job.data.content,
         chatId: job.data.chatId,
         sender: job.data.sender,
       });
+      await Chat.updateOne(
+        { _id: job.data.chatId },
+        {
+          $set: {
+            lastMessage: createdMessage._id,
+          },
+        }
+      );
     } catch (error) {
       console.log("Save message db err: ", error);
       await messageQueue.pause();
