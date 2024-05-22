@@ -5,7 +5,7 @@ import {
   getOrCreateOneonOneChat,
 } from "../controllers/chat.controller";
 import { createOrGetChatValidation } from "../validators/chat.validator";
-import { validate } from "../validate";
+import { validate } from "../validators/validate";
 
 const router = express.Router();
 

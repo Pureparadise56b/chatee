@@ -1,22 +1,14 @@
 import express from "express";
+import { getOTP, loginUser } from "../controllers/auth.controller";
 import {
-  loginUser,
-  resendOtp,
-  verifyUser,
-} from "../controllers/auth.controller";
-import {
-  resendOtpValidation,
-  userRegistrationValidator,
-  verifyUserValidation,
+  getOTPValidator,
+  userLoginValidator,
 } from "../validators/auth.validator";
-import { validate } from "../validate";
+import { validate } from "../validators/validate";
 
 const router = express.Router();
 
-router.route("/login").post(userRegistrationValidator(), validate, loginUser);
-router
-  .route("/login/verify")
-  .post(verifyUserValidation(), validate, verifyUser);
-router.route("/otp/resend").post(resendOtpValidation(), validate, resendOtp);
+router.route("/otp").post(getOTPValidator(), validate, getOTP);
+router.route("/login").post(userLoginValidator(), validate, loginUser);
 
 export default router;

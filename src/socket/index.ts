@@ -106,20 +106,24 @@ const initializeSocketIO = (io: Server) => {
       });
 
       socket.on(ChatEventEnum.DISCONNECT_EVENT, async () => {
-        console.log("User disconnected userId: ", socket.user._id.toString());
         if (socket.user._id) {
-          socket.leave(socket.user._id);
           await redisGlobalClient.set(`users:online:${socket.user._id}`, 0);
+          socket.leave(socket.user._id);
+          delete (socket as any).user;
+          console.log("User disconnected userId: ", socket.user._id.toString());
         }
       });
     } catch (error: any) {
-      if (socket.user) {
+      if (socket.user._id) {
         await redisGlobalClient.set(`users:online:${socket.user?._id}`, 0);
+        socket.leave(socket.user._id.toString());
+        delete (socket as any).user;
       }
       socket.emit(
         ChatEventEnum.SOCKET_ERROR_EVENT,
         error?.message || "Something went wrong while connecting to the socket"
       );
+      console.log("Socket Error: ", error);
     }
   });
 };

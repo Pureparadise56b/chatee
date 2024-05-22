@@ -13,10 +13,7 @@ export interface UserInterface extends Document {
   phoneNumber: string;
   profile: ProfileInterface;
   registerType: string;
-  role: string;
-  accountVerified: boolean;
-  otp?: string;
-  otpExpiry?: Date;
+  role: String;
   generateAccessToken: Function;
 }
 
@@ -32,6 +29,13 @@ export interface MessageInterface extends Document {
   sender: Types.ObjectId;
   content: string;
   chatId: Types.ObjectId;
+}
+
+export interface OtpInterface extends Document {
+  phoneNumber: string;
+  otp: string;
+  createdAt: Date;
+  expireAt: Date;
 }
 
 export interface CustomeSocket extends RemoteSocket<any, any> {

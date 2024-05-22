@@ -21,8 +21,8 @@ const userSchema = new Schema<UserInterface>(
       unique: true,
       trim: true,
       match: new RegExp("^\\+?[0-9]+$"),
-      maxlength: 14,
-      minlength: 13,
+      maxlength: [14, "maximum length should be 14"],
+      minlength: [13, "minimum length should be 13"],
     },
     profile: {
       publicId: String,
@@ -35,16 +35,6 @@ const userSchema = new Schema<UserInterface>(
     role: {
       type: String,
       default: "USER",
-    },
-    accountVerified: {
-      type: Boolean,
-      default: false,
-    },
-    otp: {
-      type: String,
-    },
-    otpExpiry: {
-      type: Date,
     },
   },
   { timestamps: true }

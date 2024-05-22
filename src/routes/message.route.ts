@@ -8,7 +8,7 @@ import {
   deleteMessageValidation,
   fetchAllMessagesValidation,
 } from "../validators/message.validator";
-import { validate } from "../validate";
+import { validate } from "../validators/validate";
 
 const router = express.Router();
 

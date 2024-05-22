@@ -19,11 +19,7 @@ const setUsername = AsyncHandler(async (req, res) => {
     await user.save();
   }
 
-  await redisGlobalClient.setex(
-    `users:auth:${user?._id}`,
-    7200,
-    JSON.stringify(user)
-  );
+  await redisGlobalClient.del(`users:auth:${user?._id}`);
 
   res
     .status(200)
@@ -86,26 +82,9 @@ const getAvailableNumbers = AsyncHandler(async (req, res) => {
 const getUserDetails = AsyncHandler(async (req, res) => {
   const { _id } = req.user as UserInterface;
 
-  const userHasCache = await redisGlobalClient.get(`users:details:${_id}`);
+  const user = await User.findById(_id);
 
-  if (userHasCache) {
-    const cachedUser = JSON.parse(userHasCache);
-    res
-      .status(200)
-      .json(new ApiResponse(200, "User fetched successfully", cachedUser));
-  } else {
-    const actualUser = await User.findById(_id);
-
-    await redisGlobalClient.setex(
-      `users:details:${_id}`,
-      3600,
-      JSON.stringify(actualUser)
-    );
-
-    res
-      .status(200)
-      .json(new ApiResponse(200, "User fetched successfully", actualUser));
-  }
+  res.status(200).json(new ApiResponse(200, "User fetched successfully", user));
 });
 
 export { setUsername, getAvailableNumbers, getUserDetails };

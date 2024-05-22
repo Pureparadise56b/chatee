@@ -1,6 +1,6 @@
 import { body } from "express-validator";
 
-const userRegistrationValidator = () => {
+const getOTPValidator = () => {
   return [
     body("phoneNumber")
       .notEmpty()
@@ -10,7 +10,7 @@ const userRegistrationValidator = () => {
   ];
 };
 
-const verifyUserValidation = () => {
+const userLoginValidator = () => {
   return [
     body("otp")
       .notEmpty()
@@ -32,14 +32,14 @@ const verifyUserValidation = () => {
   ];
 };
 
-const resendOtpValidation = () => {
-  return [
-    body("phoneNumber")
-      .notEmpty()
-      .withMessage("Phone number must be provided")
-      .isMobilePhone("en-IN")
-      .withMessage("Please enter a valid phone number"),
-  ];
-};
+// const resendOtpValidation = () => {
+//   return [
+//     body("phoneNumber")
+//       .notEmpty()
+//       .withMessage("Phone number must be provided")
+//       .isMobilePhone("en-IN")
+//       .withMessage("Please enter a valid phone number"),
+//   ];
+// };
 
-export { userRegistrationValidator, verifyUserValidation, resendOtpValidation };
+export { getOTPValidator, userLoginValidator };

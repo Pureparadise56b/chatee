@@ -9,7 +9,7 @@ import {
   availableNumbersValidator,
   setUsernameValidator,
 } from "../validators/user.validator";
-import { validate } from "../validate";
+import { validate } from "../validators/validate";
 
 const router = express.Router();
 
