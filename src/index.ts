@@ -9,9 +9,9 @@ const port = process.env.PORT || 3000;
 
 connecDb()
   .then(async () => {
-    if (process.env.ENVIRONMENT === "DEVELOPMENT") {
-      await redisGlobalClient.flushdb();
-    }
+    process.env.ENVIRONMENT === "DEVELOPMENT" &&
+      (await redisGlobalClient.flushdb());
+
     httpServer.listen(port, () => {
       console.log(`Server started: http://localhost:${port}`);
     });

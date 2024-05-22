@@ -32,6 +32,16 @@ const userLoginValidator = () => {
   ];
 };
 
+const generateNewTokenValidator = () => {
+  return [
+    body("refreshToken")
+      .notEmpty()
+      .withMessage("Refresh token must be provied")
+      .isString()
+      .withMessage("Please provide a valid refreshToken"),
+  ];
+};
+
 // const resendOtpValidation = () => {
 //   return [
 //     body("phoneNumber")
@@ -42,4 +52,4 @@ const userLoginValidator = () => {
 //   ];
 // };
 
-export { getOTPValidator, userLoginValidator };
+export { getOTPValidator, userLoginValidator, generateNewTokenValidator };

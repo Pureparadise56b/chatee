@@ -19,8 +19,8 @@ export const sendOTP = async (otp: string, phoneNumber: string) => {
 
     console.log(`OPT sent to: ${response.to}`);
     return true;
-  } catch (error) {
-    console.error("Twilio Error: ", error);
+  } catch (error: any) {
+    console.error("Twilio Error: ", error.message);
     return false;
   }
 };

@@ -45,11 +45,6 @@ app.use("/api/chats", chatRouter);
 // message routes
 app.use("/api/messages", messageRouter);
 
-// error handling middleware
-app.use((err: any, req: any, res: any, next: any) => {
-  res.status(err.statusCode ? err.statusCode : 500).send(err.message);
-});
-
 app.get("/", (req, res) => {
   res.sendFile(path.resolve("test.html"));
 });
@@ -69,5 +64,10 @@ redisSubscriber.subscribe("MESSAGES");
     }
   });
 })();
+
+// error handling middleware
+app.use((err: any, req: any, res: any, next: any) => {
+  res.status(err.statusCode || 500).send(err.message);
+});
 
 export { httpServer };

@@ -5,6 +5,13 @@ import { User } from "../models/user.model";
 import { Otp } from "../models/otp.model";
 import { USER_REGISTER_TYPE } from "../constants";
 import { sendOTP } from "../utils/sendOTP.util";
+import {
+  generateNewAccessToken,
+  generateTokens,
+} from "../utils/generateTokens.util";
+import { Session } from "../models/session.model";
+import { redisGlobalClient } from "../redis/config.redis";
+import { UserInterface } from "../interfaces";
 
 const generateOtp = () => {
   const charecters = "01234567890";
@@ -58,7 +65,14 @@ const loginUser = AsyncHandler(async (req, res) => {
 
   let user = await User.findOne({ phoneNumber });
 
-  if (!user) {
+  if (user) {
+    const session = await Session.findOne({ userId: user._id });
+    if (session)
+      throw new ApiError(
+        400,
+        "User has already an active session, please logout first."
+      );
+  } else {
     user = await User.create({
       phoneNumber,
       registerType: USER_REGISTER_TYPE.LOCAL,
@@ -67,14 +81,37 @@ const loginUser = AsyncHandler(async (req, res) => {
 
   await Otp.deleteMany({ phoneNumber });
 
-  const accessToken = await user.generateAccessToken();
+  const { accessToken, refreshToken } = await generateTokens(user._id);
 
   res.status(200).json(
     new ApiResponse(200, "User login successfull", {
-      token: accessToken,
+      accessToken,
+      refreshToken,
       isUserNameSet: user.isUsernameSet,
     })
   );
 });
 
-export { getOTP, loginUser };
+const generateNewToken = AsyncHandler(async (req, res) => {
+  const { refreshToken } = req.body;
+
+  const newToken = await generateNewAccessToken(refreshToken);
+
+  res.status(201).json(
+    new ApiResponse(201, "New access token created successfully", {
+      accessToken: newToken,
+    })
+  );
+});
+
+const logoutUser = AsyncHandler(async (req, res) => {
+  const { _id } = req.user as UserInterface;
+
+  await redisGlobalClient.del(`users:details:${_id}`);
+  await redisGlobalClient.del(`users:sessions:${_id}`);
+  await Session.deleteMany({ userId: _id });
+
+  res.status(200).json(new ApiResponse(200, "Usesr logout successfully"));
+});
+
+export { getOTP, loginUser, generateNewToken, logoutUser };

@@ -1,18 +1,10 @@
 import { AsyncHandler } from "../utils/AsyncHandler.util";
 import { ApiError } from "../utils/ApiError.util";
 import jwt from "jsonwebtoken";
-import { UserInterface, decodedDataInterface } from "../interfaces";
+import { decodedDataInterface } from "../interfaces";
 import { User } from "../models/user.model";
 import { redisGlobalClient } from "../redis/config.redis";
-
-// modify the request object and include user object into it
-declare global {
-  namespace Express {
-    interface Request {
-      user?: UserInterface | null;
-    }
-  }
-}
+import { Session } from "../models/session.model";
 
 export const JWTVerify = AsyncHandler(async (req, res, next) => {
   const header = req.headers["authorization"] || "";
@@ -20,31 +12,51 @@ export const JWTVerify = AsyncHandler(async (req, res, next) => {
   if (!header || !header.startsWith("Bearer"))
     throw new ApiError(400, "Authorization header is required");
 
-  const token = header.split(" ")[1];
+  const accessToken = header.split(" ")[1];
 
-  if (!token) throw new ApiError(400, "Access token is required");
+  if (!accessToken) throw new ApiError(400, "Access token is required");
 
-  const decodedToken = jwt.verify(
-    token,
+  const decodedData = jwt.verify(
+    accessToken,
     process.env.ACCESS_TOKEN_SECRET!
   ) as decodedDataInterface;
 
-  if (!decodedToken) throw new ApiError(400, "Invalid token");
+  if (!decodedData) throw new ApiError(400, "Invalid token");
+
+  const sessionHasCache = await redisGlobalClient.get(
+    `users:sessions:${decodedData._id}`
+  );
+
+  if (!sessionHasCache) {
+    const session = await Session.findOne({ userId: decodedData._id });
+    if (!session) {
+      throw new ApiError(401, "User has no session");
+    } else {
+      await redisGlobalClient.setex(
+        `users:sessions:${decodedData._id}`,
+        18000,
+        JSON.stringify({
+          activeSession: true,
+          createdAt: session.createdAt,
+        })
+      );
+    }
+  }
 
   const userHasCache = await redisGlobalClient.get(
-    `users:auth:${decodedToken._id}`
+    `users:details:${decodedData._id}`
   );
 
   if (userHasCache) {
     req.user = JSON.parse(userHasCache);
     next();
   } else {
-    const actualUser = await User.findById(decodedToken._id);
+    const actualUser = await User.findById(decodedData._id);
 
     if (!actualUser) throw new ApiError(400, "Invalid token");
 
     await redisGlobalClient.setex(
-      `users:auth:${decodedToken._id}`,
+      `users:details:${decodedData._id}`,
       7200,
       JSON.stringify(actualUser)
     );

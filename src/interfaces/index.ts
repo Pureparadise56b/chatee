@@ -1,6 +1,7 @@
 import { Document, Types } from "mongoose";
 import { JwtPayload } from "jsonwebtoken";
 import { RemoteSocket } from "socket.io";
+import { Request } from "express";
 
 interface ProfileInterface {
   publicId: string;
@@ -14,7 +15,6 @@ export interface UserInterface extends Document {
   profile: ProfileInterface;
   registerType: string;
   role: String;
-  generateAccessToken: Function;
 }
 
 export interface ChatInterface extends Document {
@@ -38,12 +38,23 @@ export interface OtpInterface extends Document {
   expireAt: Date;
 }
 
-export interface CustomeSocket extends RemoteSocket<any, any> {
-  user: UserInterface;
+export interface SessionInterface extends Document {
+  userId: Types.ObjectId;
+  refreshToken: string;
+  accessTokenCreationDate: Date;
+  createdAt: Date;
+}
+
+export interface CustomReqInterface extends Request {
+  user?: UserInterface | null;
 }
 
 export interface decodedDataInterface extends JwtPayload {
   _id: string;
+}
+
+interface CustomeSocketInterface extends RemoteSocket<any, any> {
+  user: UserInterface | null;
 }
 
 interface requestUserInterface {

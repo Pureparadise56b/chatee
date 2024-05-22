@@ -76,7 +76,7 @@ const initializeSocketIO = (io: Server) => {
       if (!decodeData) throw new ApiError(401, "Invalid access token");
 
       const userHasCache = await redisGlobalClient.get(
-        `users:auth:${decodeData._id}`
+        `users:details:${decodeData._id}`
       );
 
       if (userHasCache) {

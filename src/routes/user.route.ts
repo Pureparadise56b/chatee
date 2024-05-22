@@ -20,5 +20,8 @@ router.route("/").get(getUserDetails);
 router
   .route("/check/numbers")
   .post(availableNumbersValidator(), validate, getAvailableNumbers);
+router.route("/temp").get((req, res) => {
+  res.send("by bye");
+});
 
 export default router;

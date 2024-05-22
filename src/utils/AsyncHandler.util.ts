@@ -1,14 +1,18 @@
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
+import { CustomReqInterface } from "../interfaces";
 
 type handlerFunction = (
-  req: Request,
+  req: CustomReqInterface,
   res: Response,
   next: NextFunction
 ) => Promise<any>;
 
 export const AsyncHandler =
-  (fn: handlerFunction) => (req: Request, res: Response, next: NextFunction) =>
+  (fn: handlerFunction) =>
+  (req: CustomReqInterface, res: Response, next: NextFunction) =>
     Promise.resolve(fn(req, res, next)).catch((error) => {
-      console.error(error);
+      process.env.ENVIRONMENT === "DEVELOPMENT"
+        ? console.error(error)
+        : console.error(`Error :: ${error.message}`);
       return next(error);
     });
