@@ -4,6 +4,7 @@ import { ApiError } from "../utils/ApiError.util";
 import { User } from "../models/user.model";
 import { UserInterface } from "../interfaces";
 import { redisGlobalClient } from "../redis/config.redis";
+import { getAvatarGetUrl, getAvatarUploadUrl } from "../utils/AWS_S3.util";
 
 const setUsername = AsyncHandler(async (req, res) => {
   const { _id } = req.user as UserInterface;
@@ -97,4 +98,30 @@ const getUserDetails = AsyncHandler(async (req, res) => {
   }
 });
 
-export { setUsername, getAvailableNumbers, getUserDetails };
+const uploadAvatar = AsyncHandler(async (req, res) => {
+  const { _id } = req.user as UserInterface;
+
+  const user = await User.findById(_id);
+
+  if (user) {
+    const filename = `${_id}.jpeg`;
+    const uploadUrl = await getAvatarUploadUrl(filename, "image/jpeg");
+    const getAvatarUrl = await getAvatarGetUrl(filename);
+
+    if (!uploadUrl || !getAvatarUrl)
+      throw new ApiError(500, "Error while generating urls for avatar");
+
+    user.profile = getAvatarUrl;
+    await user.save();
+    await redisGlobalClient.del(`users:details:${_id}`);
+    res.status(200).json(
+      new ApiResponse(200, "User upload url generate successfully", {
+        uploadUrl,
+      })
+    );
+  } else {
+    throw new ApiError(404, "User not found");
+  }
+});
+
+export { setUsername, getAvailableNumbers, getUserDetails, uploadAvatar };

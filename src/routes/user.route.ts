@@ -4,6 +4,7 @@ import {
   setUsername,
   getAvailableNumbers,
   getUserDetails,
+  uploadAvatar,
 } from "../controllers/user.controller";
 import {
   availableNumbersValidator,
@@ -20,8 +21,6 @@ router.route("/").get(getUserDetails);
 router
   .route("/check/numbers")
   .post(availableNumbersValidator(), validate, getAvailableNumbers);
-router.route("/temp").get((req, res) => {
-  res.send("by bye");
-});
+router.route("/avatar").get(uploadAvatar);
 
 export default router;

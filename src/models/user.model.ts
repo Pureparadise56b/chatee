@@ -24,8 +24,8 @@ const userSchema = new Schema<UserInterface>(
       minlength: [13, "minimum length should be 13"],
     },
     profile: {
-      publicId: String,
-      url: String,
+      type: String,
+      default: "",
     },
     registerType: {
       type: String,

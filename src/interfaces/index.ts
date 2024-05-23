@@ -3,16 +3,11 @@ import { JwtPayload } from "jsonwebtoken";
 import { RemoteSocket } from "socket.io";
 import { Request } from "express";
 
-interface ProfileInterface {
-  publicId: string;
-  url: string;
-}
-
 export interface UserInterface extends Document {
   username: string;
   isUsernameSet: boolean;
   phoneNumber: string;
-  profile: ProfileInterface;
+  profile: string;
   registerType: string;
   role: String;
 }
