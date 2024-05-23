@@ -4,6 +4,8 @@ import { ApiError } from "../utils/ApiError.util";
 import mongoose from "mongoose";
 import { Message } from "../models/message.model";
 import { Chat } from "../models/chat.model";
+import { emitSocketEvent } from "../socket";
+import { ChatEventEnum } from "../constants";
 
 const fetchAllMessages = AsyncHandler(async (req, res) => {
   const { chatId } = req.params;
@@ -60,7 +62,15 @@ const deleteMessage = AsyncHandler(async (req, res) => {
   if (message.sender.toString() !== req.user?._id)
     throw new ApiError(401, "User can't delete this message");
 
-  await Message.findOneAndDelete({ _id: messageId, chatId });
+  const deletedMessage = await Message.findOneAndDelete({
+    _id: messageId,
+    chatId,
+  });
+
+  emitSocketEvent(req, chatId, ChatEventEnum.MESSAGE_DELETE_EVENT, {
+    messageId: deletedMessage?._id,
+    chatId,
+  });
 
   res.status(200).json(new ApiResponse(200, "Message deleted successfully"));
 });

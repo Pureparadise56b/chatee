@@ -90,7 +90,7 @@ const initializeSocketIO = (io: Server) => {
       socket.join(socket.user._id.toString());
       socket.emit(ChatEventEnum.CONNECTED_EVENT);
 
-      await redisGlobalClient.set(`users:online:${socket.user._id}`, 1);
+      await redisGlobalClient.set(`users:onlines:${socket.user._id}`, 1);
 
       console.log("\nUser connected...", socket.user._id.toString());
       console.log("ChatRoom: ", socket.rooms);
@@ -107,7 +107,7 @@ const initializeSocketIO = (io: Server) => {
 
       socket.on(ChatEventEnum.DISCONNECT_EVENT, async () => {
         if (socket.user._id) {
-          await redisGlobalClient.set(`users:online:${socket.user._id}`, 0);
+          await redisGlobalClient.set(`users:onlines:${socket.user._id}`, 0);
           socket.leave(socket.user._id);
           delete (socket as any).user;
           console.log("User disconnected userId: ", socket.user._id.toString());
@@ -115,7 +115,7 @@ const initializeSocketIO = (io: Server) => {
       });
     } catch (error: any) {
       if (socket.user._id) {
-        await redisGlobalClient.set(`users:online:${socket.user?._id}`, 0);
+        await redisGlobalClient.set(`users:onlines:${socket.user?._id}`, 0);
         socket.leave(socket.user._id.toString());
         delete (socket as any).user;
       }
