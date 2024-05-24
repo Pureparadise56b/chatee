@@ -65,9 +65,20 @@ redisSubscriber.subscribe("MESSAGES");
   });
 })();
 
+// 404 not found error handler middleware
+app.use((req, res, next) => {
+  res.status(404).json({
+    error: {
+      message: "page not found",
+      method: req.method,
+      route: req.path,
+    },
+  });
+});
+
 // error handling middleware
 app.use((err: any, req: any, res: any, next: any) => {
-  res.status(err.statusCode || 500).send(err.message);
+  res.status(err.statusCode || 500).send(err || "Internal server error");
 });
 
 export { httpServer };

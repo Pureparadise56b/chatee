@@ -12,4 +12,7 @@ export function createRedisClient() {
   return new Redis(redisConfig);
 }
 
-export const redisGlobalClient = new Redis(redisConfig);
+export const redisGlobalClient = new Redis({
+  host: "localhost",
+  port: 6379,
+});

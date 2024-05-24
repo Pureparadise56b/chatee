@@ -109,12 +109,12 @@ const initializeSocketIO = (io: Server) => {
         if (socket.user._id) {
           await redisGlobalClient.set(`users:onlines:${socket.user._id}`, 0);
           socket.leave(socket.user._id);
-          delete (socket as any).user;
           console.log("User disconnected userId: ", socket.user._id.toString());
+          delete (socket as any).user;
         }
       });
     } catch (error: any) {
-      if (socket.user._id) {
+      if (socket.user?._id) {
         await redisGlobalClient.set(`users:onlines:${socket.user?._id}`, 0);
         socket.leave(socket.user._id.toString());
         delete (socket as any).user;

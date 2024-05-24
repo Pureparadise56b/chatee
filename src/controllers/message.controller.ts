@@ -6,6 +6,7 @@ import { Message } from "../models/message.model";
 import { Chat } from "../models/chat.model";
 import { emitSocketEvent } from "../socket";
 import { ChatEventEnum } from "../constants";
+import { DecodeMessageStream } from "../utils/messageStream.util";
 
 const fetchAllMessages = AsyncHandler(async (req, res) => {
   const { chatId } = req.params;
@@ -17,7 +18,7 @@ const fetchAllMessages = AsyncHandler(async (req, res) => {
   if (!chat.members.includes(req.user?._id))
     throw new ApiError(400, "User is not the member of this chat");
 
-  const messages = await Message.aggregate([
+  const messageCursor = await Message.aggregate([
     {
       $match: {
         chatId: { $eq: new mongoose.Types.ObjectId(chatId) },
@@ -45,11 +46,28 @@ const fetchAllMessages = AsyncHandler(async (req, res) => {
         sender: { $first: "$sender" },
       },
     },
-  ]);
+  ]).cursor();
 
-  res
-    .status(200)
-    .json(new ApiResponse(200, "Messages fetched successfully", messages));
+  const decodedStream = new DecodeMessageStream({ objectMode: true });
+
+  messageCursor.pipe(decodedStream);
+
+  const messages: any[] = [];
+
+  decodedStream.on("data", (data) => {
+    messages.push(data);
+  });
+
+  decodedStream.on("end", () => {
+    res
+      .status(200)
+      .json(new ApiResponse(200, "Messages fetched successfully", messages));
+  });
+
+  decodedStream.on("error", (err) => {
+    console.error("Stream Error: ", err);
+    throw new ApiError(500, "Error while streaming messages");
+  });
 });
 
 const deleteMessage = AsyncHandler(async (req, res) => {
