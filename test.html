@@ -3,170 +3,32 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
+    <title>Fetch</title>
   </head>
   <body>
-    <h1>Socket</h1>
-    <p style="color: green" id="user-status"></p>
-    <div id="user-typing" style="font-size: 20px; color: green"></div>
-    <div style="display: flex; flex-direction: column; width: 300px; gap: 10px">
-      <button id="joinRoom1" style="padding: 6px; font-size: 15px">
-        join Room 1
-      </button>
-      <button id="joinRoom2" style="padding: 6px; font-size: 15px">
-        join Room 2
-      </button>
-    </div>
-    <div>
-      <input
-        type="text"
-        name=""
-        id="message"
-        style="display: block; margin: 10px; height: 30px; width: 300px"
-      />
-      <button
-        id="send-button1"
-        style="padding: 6px; font-size: 15px; background-color: green"
-      >
-        send msg in room 1
-      </button>
-      <button
-        id="send-button2"
-        style="padding: 6px; font-size: 15px; background-color: green"
-      >
-        send msg in room 2
-      </button>
-    </div>
-
-    <div id="messages"></div>
+    <button id="fetchButton">click me</button>
   </body>
-  <script src="/socket.io/socket.io.js"></script>
   <script>
-    let chatId;
-    const token = window.localStorage.getItem("token");
-    const user = window.localStorage.getItem("user");
+    const button = document.getElementById("fetchButton");
 
-    const messages = document.getElementById("messages");
-    const button1 = document.getElementById("send-button1");
-    const button2 = document.getElementById("send-button2");
-    const userStatus = document.getElementById("user-status");
+    button.addEventListener("click", async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:3000/api/messages/66517b71a9d4f960cab1747a",
+          {
+            headers: {
+              Authorization:
+                "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NjUwOWVkODNkN2ZjYWUzYmM3M2QzMWIiLCJpYXQiOjE3MTY2MTU5ODksImV4cCI6MTcxNzIyMDc4OX0.ew1YBN6oJ1zVbjfMWE2TIvCjuKkKVTykKlgZ763R6h4",
+            },
+          }
+        );
 
-    const fetchMessage = () => {
-      const message = document.getElementById("message").value;
-      document.getElementById("message").value = "";
-      return message;
-    };
+        const data = await response.json();
 
-    const sendMessageToFrontend = (payload) => {
-      const p = document.createElement("p");
-      p.innerText = `${payload.user}: ${payload.content}`;
-      messages.appendChild(p);
-    };
-
-    const showReceiverStatus = (payload) => {
-      if (payload.receiverStatus === "1") {
-        if (userStatus.innerText !== "online") {
-          userStatus.innerText = "online";
-          userStatus.style.color = "green";
-        }
-      } else {
-        if (userStatus.innerText !== "offline") {
-          userStatus.innerText = "offline";
-          userStatus.style.color = "red";
-        }
+        console.log(data);
+      } catch (error) {
+        console.error(error);
       }
-    };
-
-    const socket = io({
-      auth: {
-        token,
-      },
-    });
-
-    setInterval(() => {
-      socket.emit("getReceiverStatus", {
-        receiverId: "66419189dc0d44886c77fe1d",
-        chatId,
-      });
-    }, 3000);
-
-    socket.on("typing", (payload) => {
-      userTyping.innerText = `typing...`;
-    });
-
-    socket.on("stopTyping", (chatId) => {
-      userTyping.innerText = null;
-    });
-
-    socket.on("newChat", (payload) => {
-      console.log("hi");
-    });
-
-    // When a user joins a chat
-    socket.on("userOnline", (userId) => {
-      console.log(`User ${userId} is online`);
-      // Update UI to indicate that the user is online
-    });
-
-    socket.on("socketError", (error) => {
-      console.error("Socket Error :: ", error);
-    });
-
-    socket.on("messageReceived", (payload) => {
-      sendMessageToFrontend(payload);
-    });
-
-    socket.on("isReceiverOnline", (payload) => {
-      showReceiverStatus(payload);
-    });
-
-    let typingTimer;
-    const typingInterval = 2000;
-
-    const userTyping = document.getElementById("user-typing");
-    document.getElementById("joinRoom1").addEventListener("click", () => {
-      chatId = "1234";
-      button2.style.cursor = "no-drop";
-      button2.disabled = true;
-      button1.style.cursor = "default";
-      button1.disabled = false;
-      socket.emit("leaveChat", "abcd");
-      socket.emit("joinChat", "1234");
-    });
-
-    document.getElementById("joinRoom2").addEventListener("click", () => {
-      chatId = "abcd";
-      button2.style.cursor = "default";
-      button2.disabled = false;
-      button1.style.cursor = "no-drop";
-      button1.disabled = true;
-      socket.emit("leaveChat", "1234");
-      socket.emit("joinChat", "abcd");
-    });
-
-    button1.addEventListener("click", () => {
-      const message = fetchMessage();
-      if (!message) return;
-      socket.emit("sendMessage", {
-        chatId,
-        content: message,
-        user,
-      });
-    });
-
-    button2.addEventListener("click", () => {
-      const message = fetchMessage();
-      if (!message) return;
-      socket.emit("sendMessage", { chatId, content: message, user });
-    });
-
-    document.getElementById("message").addEventListener("input", () => {
-      clearTimeout(typingTimer);
-      socket.emit("typing", chatId);
-
-      typingTimer = setTimeout(() => {
-        socket.emit("stopTyping", chatId);
-      }, typingInterval);
     });
   </script>
 </html>

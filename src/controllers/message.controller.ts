@@ -6,14 +6,17 @@ import { Message } from "../models/message.model";
 import { Chat } from "../models/chat.model";
 import { emitSocketEvent } from "../socket";
 import { ChatEventEnum } from "../constants";
-import { DecodeMessageStream } from "../utils/messageStream.util";
+import {
+  DecodeMessageStream,
+  JsonArrayStream,
+} from "../utils/messageStream.util";
 
 const fetchAllMessages = AsyncHandler(async (req, res) => {
   const { chatId } = req.params;
 
   const chat = await Chat.findById(chatId);
 
-  if (!chat) throw new ApiError(400, "Chat does not exist");
+  if (!chat) throw new ApiError(404, "Chat does not exist");
 
   if (!chat.members.includes(req.user?._id))
     throw new ApiError(400, "User is not the member of this chat");
@@ -49,23 +52,30 @@ const fetchAllMessages = AsyncHandler(async (req, res) => {
   ]).cursor();
 
   const decodedStream = new DecodeMessageStream({ objectMode: true });
+  const jsonArrayStream = new JsonArrayStream();
+  // const messages: any[] = [];
 
   messageCursor.pipe(decodedStream);
 
-  const messages: any[] = [];
+  decodedStream.pipe(jsonArrayStream).pipe(res);
 
-  decodedStream.on("data", (data) => {
-    messages.push(data);
-  });
+  // decodedStream.on("data", (data) => {
+  //   messages.push(JSON.parse(data));
+  // });
 
-  decodedStream.on("end", () => {
-    res
-      .status(200)
-      .json(new ApiResponse(200, "Messages fetched successfully", messages));
-  });
+  // decodedStream.on("end", () => {
+  //   res
+  //     .status(200)
+  //     .json(new ApiResponse(200, "Messages fetched successfully", messages));
+  // });
 
   decodedStream.on("error", (err) => {
     console.error("Stream Error: ", err);
+    throw new ApiError(500, "Error while streaming messages");
+  });
+
+  jsonArrayStream.on("error", (err) => {
+    console.error("Response Error: ", err);
     throw new ApiError(500, "Error while streaming messages");
   });
 });
