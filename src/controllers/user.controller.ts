@@ -5,6 +5,19 @@ import { User } from "../models/user.model";
 import { UserInterface } from "../interfaces";
 import { redisGlobalClient } from "../redis/config.redis";
 import { getAvatarGetUrl, getAvatarUploadUrl } from "../utils/AWS_S3.util";
+import { URL } from "url";
+
+const getMiliSecondFromParameterDate = (paramasDate: string) => {
+  const regex = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/;
+  const match = paramasDate?.match(regex);
+  if (match) {
+    const [, year, month, day, hour, minute, second] = match;
+    const profileDate = `${year}-${month}-${day}T${hour}:${minute}:${second}Z`;
+    return new Date(profileDate).getTime();
+  } else {
+    console.error("Time not matched");
+  }
+};
 
 const setUsername = AsyncHandler(async (req, res) => {
   const { _id } = req.user as UserInterface;
@@ -82,20 +95,40 @@ const getAvailableNumbers = AsyncHandler(async (req, res) => {
 
 const getUserDetails = AsyncHandler(async (req, res) => {
   const { _id } = req.user as UserInterface;
+  let user = null;
 
   const userHasCache = await redisGlobalClient.get(`users:details:${_id}`);
 
   if (userHasCache) {
-    const cachedUser = JSON.parse(userHasCache);
-    res
-      .status(200)
-      .json(new ApiResponse(200, "User fetched successfully", cachedUser));
+    user = JSON.parse(userHasCache);
   } else {
-    const user = await User.findById(_id);
-    res
-      .status(200)
-      .json(new ApiResponse(200, "User fetched successfully", user));
+    user = await User.findById(_id);
   }
+
+  const params = new URL(user.profile).searchParams;
+  const profileParameterDate = params.get("X-Amz-Date");
+  const profileExpiry = params.get("X-Amz-Expires");
+
+  const profileDateMiliSecond = getMiliSecondFromParameterDate(
+    profileParameterDate || ""
+  );
+  const currentDate = Date.now();
+
+  if (
+    profileExpiry &&
+    profileDateMiliSecond &&
+    (currentDate - profileDateMiliSecond) / 1000 > parseInt(profileExpiry)
+  ) {
+    const newProfilieURL = await getAvatarGetUrl(`${_id}.jpeg`);
+    user = await User.findByIdAndUpdate(_id, {
+      $set: {
+        profile: newProfilieURL,
+      },
+    });
+    await redisGlobalClient.del(`users:details:${_id}`);
+  }
+
+  res.status(200).json(new ApiResponse(200, "User fetched successfully", user));
 });
 
 const uploadAvatar = AsyncHandler(async (req, res) => {
