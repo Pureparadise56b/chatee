@@ -105,27 +105,29 @@ const getUserDetails = AsyncHandler(async (req, res) => {
     user = await User.findById(_id);
   }
 
-  const params = new URL(user.profile).searchParams;
-  const profileParameterDate = params.get("X-Amz-Date");
-  const profileExpiry = params.get("X-Amz-Expires");
+  if (user.profile) {
+    const params = new URL(user.profile).searchParams;
+    const profileParameterDate = params.get("X-Amz-Date");
+    const profileExpiry = params.get("X-Amz-Expires");
 
-  const profileDateMiliSecond = getMiliSecondFromParameterDate(
-    profileParameterDate || ""
-  );
-  const currentDate = Date.now();
+    const profileDateMiliSecond = getMiliSecondFromParameterDate(
+      profileParameterDate || ""
+    );
+    const currentDate = Date.now();
 
-  if (
-    profileExpiry &&
-    profileDateMiliSecond &&
-    (currentDate - profileDateMiliSecond) / 1000 > parseInt(profileExpiry)
-  ) {
-    const newProfilieURL = await getAvatarGetUrl(`${_id}.jpeg`);
-    user = await User.findByIdAndUpdate(_id, {
-      $set: {
-        profile: newProfilieURL,
-      },
-    });
-    await redisGlobalClient.del(`users:details:${_id}`);
+    if (
+      profileExpiry &&
+      profileDateMiliSecond &&
+      (currentDate - profileDateMiliSecond) / 1000 > parseInt(profileExpiry)
+    ) {
+      const newProfilieURL = await getAvatarGetUrl(`${_id}.jpeg`);
+      user = await User.findByIdAndUpdate(_id, {
+        $set: {
+          profile: newProfilieURL,
+        },
+      });
+      await redisGlobalClient.del(`users:details:${_id}`);
+    }
   }
 
   res.status(200).json(new ApiResponse(200, "User fetched successfully", user));
