@@ -51,7 +51,7 @@ const fetchAllMessages = AsyncHandler(async (req, res) => {
     },
   ]).cursor();
 
-  const decodedStream = new DecodeMessageStream({ objectMode: true });
+  const decodedStream = new DecodeMessageStream();
   const jsonArrayStream = new JsonArrayStream();
   // const messages: any[] = [];
 

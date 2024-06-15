@@ -74,6 +74,17 @@ const getAllChats = AsyncHandler(async (req, res) => {
     ...commonAggregation(),
   ]);
 
+  if (chats.length) {
+    chats.map((chat) => {
+      if (chat.lastMessage?.content) {
+        chat.lastMessage.content = Buffer.from(
+          chat.lastMessage.content,
+          "base64url"
+        ).toString("utf-8");
+      }
+    });
+  }
+
   res
     .status(200)
     .json(new ApiResponse(200, "All chats fetched successfully", chats));

@@ -58,8 +58,8 @@ redisSubscriber.subscribe("MESSAGES");
   redisSubscriber.on("message", async (channel, payloadString) => {
     if (channel === "MESSAGES") {
       const payload = JSON.parse(payloadString);
-      io.in(payload.chatId).emit(ChatEventEnum.MESSAGE_RECEIVED_EVENT, payload);
       if (!payload.chatId || !mongoose.isValidObjectId(payload.chatId)) return;
+      io.in(payload.chatId).emit(ChatEventEnum.MESSAGE_RECEIVED_EVENT, payload);
       await messageQueue.add("MESSAGES", payload);
     }
   });

@@ -1,8 +1,8 @@
-import { Transform, TransformCallback, TransformOptions } from "stream";
+import { Transform, TransformCallback } from "stream";
 
 export class DecodeMessageStream extends Transform {
-  constructor(options: TransformOptions) {
-    super(options);
+  constructor() {
+    super({ objectMode: true });
   }
 
   _transform(
