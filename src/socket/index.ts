@@ -15,6 +15,24 @@ declare module "socket.io" {
 
 const redisPublisher = createRedisClient();
 
+const mountCallOfferEvent = (socket: Socket): void => {
+  socket.on(ChatEventEnum.CALL_OFFER, (payload: any) => {
+    socket.to(payload.receiverId).emit(ChatEventEnum.CALL_OFFER, payload);
+  });
+};
+
+const mountCallAnswerEvent = (socket: Socket): void => {
+  socket.on(ChatEventEnum.CALL_ANSWER, (payload: any) => {
+    socket.to(payload.callerId).emit(ChatEventEnum.CALL_ANSWER, payload);
+  });
+};
+
+const mountIceCandidateEvent = (socket: Socket): void => {
+  socket.on(ChatEventEnum.ICE_CANDIDATE, (payload: any) => {
+    socket.to(payload.receiverId).emit(ChatEventEnum.ICE_CANDIDATE, payload);
+  });
+};
+
 const mountJoinChatEvent = (socket: Socket): void => {
   socket.on(ChatEventEnum.JOIN_CHAT_EVENT, (chatId) => {
     console.log("User joined a chat: ", chatId);
@@ -100,6 +118,9 @@ const initializeSocketIO = (io: Server) => {
       mountUserTypingStopEvent(socket);
       mountLeaveChatEvent(socket);
       mountIsReceiverOnlineEvent(socket);
+      mountCallOfferEvent(socket);
+      mountCallAnswerEvent(socket);
+      mountIceCandidateEvent(socket);
 
       socket.on(ChatEventEnum.MESSAAGE_SEND_EVENT, (payload) => {
         redisPublisher.publish("MESSAGES", JSON.stringify(payload));
