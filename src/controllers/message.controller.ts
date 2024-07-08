@@ -51,13 +51,14 @@ const fetchAllMessages = AsyncHandler(async (req, res) => {
     },
   ]).cursor();
 
-  const decodedStream = new DecodeMessageStream();
   const jsonArrayStream = new JsonArrayStream();
+
+  // const decodedStream = new DecodeMessageStream();
   // const messages: any[] = [];
 
-  messageCursor.pipe(decodedStream);
+  // messageCursor.pipe(decodedStream);
 
-  decodedStream.pipe(jsonArrayStream).pipe(res);
+  // decodedStream.pipe(jsonArrayStream).pipe(res);
 
   // decodedStream.on("data", (data) => {
   //   messages.push(JSON.parse(data));
@@ -69,10 +70,12 @@ const fetchAllMessages = AsyncHandler(async (req, res) => {
   //     .json(new ApiResponse(200, "Messages fetched successfully", messages));
   // });
 
-  decodedStream.on("error", (err) => {
-    console.error("Stream Error: ", err);
-    throw new ApiError(500, "Error while streaming messages");
-  });
+  // decodedStream.on("error", (err) => {
+  //   console.error("Stream Error: ", err);
+  //   throw new ApiError(500, "Error while streaming messages");
+  // });
+
+  messageCursor.pipe(jsonArrayStream).pipe(res);
 
   jsonArrayStream.on("error", (err) => {
     console.error("Response Error: ", err);

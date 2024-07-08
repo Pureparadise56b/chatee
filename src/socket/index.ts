@@ -15,24 +15,6 @@ declare module "socket.io" {
 
 const redisPublisher = createRedisClient();
 
-const mountCallOfferEvent = (socket: Socket): void => {
-  socket.on(ChatEventEnum.CALL_OFFER, (payload: any) => {
-    socket.to(payload.receiverId).emit(ChatEventEnum.CALL_OFFER, payload);
-  });
-};
-
-const mountCallAnswerEvent = (socket: Socket): void => {
-  socket.on(ChatEventEnum.CALL_ANSWER, (payload: any) => {
-    socket.to(payload.callerId).emit(ChatEventEnum.CALL_ANSWER, payload);
-  });
-};
-
-const mountIceCandidateEvent = (socket: Socket): void => {
-  socket.on(ChatEventEnum.ICE_CANDIDATE, (payload: any) => {
-    socket.to(payload.receiverId).emit(ChatEventEnum.ICE_CANDIDATE, payload);
-  });
-};
-
 const mountJoinChatEvent = (socket: Socket): void => {
   socket.on(ChatEventEnum.JOIN_CHAT_EVENT, (chatId) => {
     console.log("User joined a chat: ", chatId);
@@ -46,6 +28,12 @@ const mountLeaveChatEvent = (socket: Socket): void => {
     console.log("User left a chat: ", chatId);
     socket.leave(chatId);
     console.log("ChatRoom: ", socket.rooms);
+  });
+};
+
+const mountSendMessageEvent = (socket: Socket): void => {
+  socket.on(ChatEventEnum.MESSAAGE_SEND_EVENT, (payload) => {
+    redisPublisher.publish("MESSAGES", JSON.stringify(payload));
   });
 };
 
@@ -73,17 +61,29 @@ const mountIsReceiverOnlineEvent = (socket: Socket): void => {
   });
 };
 
+const mountSocketDisconnectEvent = (socket: Socket): void => {
+  socket.on(ChatEventEnum.DISCONNECT_EVENT, async () => {
+    if (socket.user._id) {
+      await redisGlobalClient.set(`users:online:${socket.user._id}`, 0);
+      socket.broadcast.emit(ChatEventEnum.NEW_USER_LEFT_EVENT, socket.user._id);
+      socket.leave(socket.user._id);
+      console.log("User disconnected userId: ", socket.user._id);
+      delete (socket as any).user;
+    }
+  });
+};
+
 const initializeSocketIO = (io: Server) => {
   return io.on("connection", async (socket) => {
     try {
-      let token = socket.handshake.auth.token;
       let user = null;
-
-      if (!token) {
-        token = socket.handshake.headers.token;
-      }
-
-      if (!token)
+      let token = null;
+      if (
+        !(
+          (token = socket.handshake.auth.token) ||
+          (token = socket.handshake.headers.token)
+        )
+      )
         throw new ApiError(400, "Token is required to initialize socket");
 
       const decodeData = jwt.verify(
@@ -105,39 +105,23 @@ const initializeSocketIO = (io: Server) => {
         socket.user = user;
       }
 
-      socket.join(socket.user._id.toString());
-      socket.emit(ChatEventEnum.CONNECTED_EVENT);
-
-      await redisGlobalClient.set(`users:onlines:${socket.user._id}`, 1);
-
-      console.log("\nUser connected...", socket.user._id.toString());
-      console.log("ChatRoom: ", socket.rooms);
+      socket.join(socket.user._id);
+      await redisGlobalClient.set(`users:online:${socket.user._id}`, 1);
+      socket.broadcast.emit(ChatEventEnum.NEW_USER_JOIN_EVENT, socket.user._id);
 
       mountJoinChatEvent(socket);
+      mountLeaveChatEvent(socket);
+      mountSendMessageEvent(socket);
       mountUserTypingEvent(socket);
       mountUserTypingStopEvent(socket);
-      mountLeaveChatEvent(socket);
       mountIsReceiverOnlineEvent(socket);
-      mountCallOfferEvent(socket);
-      mountCallAnswerEvent(socket);
-      mountIceCandidateEvent(socket);
+      mountSocketDisconnectEvent(socket);
 
-      socket.on(ChatEventEnum.MESSAAGE_SEND_EVENT, (payload) => {
-        redisPublisher.publish("MESSAGES", JSON.stringify(payload));
-      });
-
-      socket.on(ChatEventEnum.DISCONNECT_EVENT, async () => {
-        if (socket.user._id) {
-          await redisGlobalClient.set(`users:onlines:${socket.user._id}`, 0);
-          socket.leave(socket.user._id);
-          console.log("User disconnected userId: ", socket.user._id.toString());
-          delete (socket as any).user;
-        }
-      });
+      console.log("\nUser connected...", socket.user._id);
     } catch (error: any) {
       if (socket.user?._id) {
-        await redisGlobalClient.set(`users:onlines:${socket.user?._id}`, 0);
-        socket.leave(socket.user._id.toString());
+        await redisGlobalClient.set(`users:onlines:${socket.user._id}`, 0);
+        socket.leave(socket.user._id);
         delete (socket as any).user;
       }
       socket.emit(

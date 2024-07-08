@@ -14,9 +14,10 @@ const queueWorker = new Worker(
   "MESSAGES",
   async (job) => {
     try {
-      const content = Buffer.from(job.data.content, "utf-8").toString(
-        "base64url"
-      );
+      // const content = Buffer.from(job.data.content, "utf-8").toString(
+      //   "base64url"
+      // );
+      const content = job.data.content;
       const createdMessage = await Message.create({
         content,
         chatId: job.data.chatId,

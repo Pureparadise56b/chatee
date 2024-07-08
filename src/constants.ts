@@ -14,6 +14,8 @@ export const ChatEventEnum = Object.freeze({
   DISCONNECT_EVENT: "disconnect",
   NEW_CHAT_EVENT: "newChat",
   JOIN_CHAT_EVENT: "joinChat",
+  NEW_USER_JOIN_EVENT: "newUserJoin",
+  NEW_USER_LEFT_EVENT: "newUserLeft",
   LEAVE_CHAT_EVENT: "leaveChat",
   MESSAAGE_SEND_EVENT: "sendMessage",
   MESSAGE_RECEIVED_EVENT: "messageReceived",
@@ -23,7 +25,4 @@ export const ChatEventEnum = Object.freeze({
   GET_RECEIVER_STATUS: "getReceiverStatus",
   IS_RECEIVER_ONLINE_EVENT: "isReceiverOnline",
   SOCKET_ERROR_EVENT: "socketError",
-  CALL_OFFER: "CALL_OFFER",
-  CALL_ANSWER: "CALL_ANSWER",
-  ICE_CANDIDATE: "ICE_CANDIDATE",
 });
