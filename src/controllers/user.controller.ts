@@ -25,8 +25,6 @@ const setUsername = AsyncHandler(async (req, res) => {
 
   const user = await User.findById(_id);
 
-  if (user?.isUsernameSet) throw new ApiError(400, "User name already set");
-
   if (user) {
     user.username = username;
     user.isUsernameSet = true;

@@ -40,7 +40,7 @@ const getOTP = AsyncHandler(async (req, res) => {
 
     sendOTP(existingOtp.otp, phoneNumber);
 
-    res.status(200).json(new ApiResponse(200, "Old OTP sent successfully"));
+    res.status(200).json(new ApiResponse(200, "OTP sent successfully"));
   } else {
     const otp = generateOtp();
     const createdOTP = await Otp.create({
@@ -52,7 +52,7 @@ const getOTP = AsyncHandler(async (req, res) => {
 
     sendOTP(otp, phoneNumber);
 
-    res.status(200).json(new ApiResponse(200, "New OTP sent successfully"));
+    res.status(200).json(new ApiResponse(200, "OTP sent successfully"));
   }
 });
 

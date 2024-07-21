@@ -8,13 +8,8 @@ const validate = (req: Request, res: Response, next: NextFunction) => {
   if (errors.isEmpty()) return next();
 
   const validationErrors: any[] = [];
-  let messageCounter = 1;
 
-  errors
-    .array()
-    .map((error) =>
-      validationErrors.push({ [`msg${messageCounter++}`]: error.msg })
-    );
+  errors.array().map((error) => validationErrors.push(error.msg));
 
   res.status(400).json(new ApiError(400, "Validation Error", validationErrors));
 };
